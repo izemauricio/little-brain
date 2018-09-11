@@ -1,2 +1,2 @@
 # littlebrain
-Little brain
+Littlebrain

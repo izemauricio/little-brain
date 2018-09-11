@@ -1,66 +1,81 @@
-var x = 0;
-var y = 0;
+/*
+IDEAS
+
+1. dna should tell: how fast, how strong, the gun power, the capacity-of-reading-food-toxity (0 to 1), vision power, etc
+2. we need find a equilibrium between # of death and # of birth
+3. 
+
+*/
+
 var bodies = [];
 var foods = [];
+var number_of_bodies = 5;
+var number_of_foods = 50;
 
 function setup() {
-    //createCanvas(1000, 1000);
-    var mycanvas = createCanvas(1000, 600);
+    var mycanvas = createCanvas(800, 800);
     mycanvas.parent('mycanvas');
     
-    noFill();
-    stroke(0);
+    //noFill();
+    stroke(1);
     strokeWeight(1);
 
     //drawingContext.shadowOffsetX = 5;
     //drawingContext.shadowOffsetY = -5;
-    //drawingContext.shadowBlur = 10;
-    //drawingContext.shadowColor = "black";
+    
 
-    for (var i = 0; i < 25; i++) {
+    for (var i = 0; i < number_of_foods; i++) {
         foods[i] = new Food();
     }
-    for (var i = 0; i < 2; i++) {
+
+    for (var i = 0; i < number_of_bodies; i++) {
         bodies[i] = new Body();
     }
- 
+
+    
 }
 
 function draw() {
-    background(200);
+    background(190);
 
-    text("fps: "+frameRate(), 30,30);
-
-    ellipse(x, y, 80, 80);
+    if (random(1,100) > 98 && foods.length < 30) {
+        foods.push(new Food());
+    }
 
     for (var i = 0; i < foods.length; i++) {
         foods[i].move();
         foods[i].display();
-        if (foods[i].energy <= 0) {
+        foods[i].checkdeath();
+        foods[i].checkpregnant();
+        if(foods[i].dead) {
             foods.splice(i,1);
+            continue;
         }
-        else if (foods[i].energy > 500) {
-            foods.push(new Body());
+        if(foods[i].pregnant && foods.length < 70) {
+            foods[i].pregnant = false;
+            foods.push(new Food());
         }
     }
 
     for (var i = 0; i < bodies.length; i++) {
-        bodies[i].doforce(bodies,foods);
+        bodies[i].createforce(bodies,foods);
         bodies[i].checkwall();
         bodies[i].move();
         bodies[i].draw();
-        if (bodies[i].energy <= 0) {
+        bodies[i].checkdeath();
+        bodies[i].checkpregnant();
+        if(bodies[i].dead) {
             bodies.splice(i,1);
+            continue;
         }
-        else if (bodies[i].energy > 500 && bodies[i].age > 100) {
+        if(bodies[i].pregnant) {
+            bodies[i].pregnant = false;
             bodies.push(new Body());
         }
     }
 
-    text("bodies: "+bodies.length,50,50);
-
-    //fill(200,50,8);
-    //ellipse(50,50,20,20);
+    fill(0,0,0);
+    text("fps: "+frameRate(), 20, 20);
+    text("bodies: "+ bodies.length,20,35);
+    text("foods: "+ foods.length,20,50);
 }
-
-

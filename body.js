@@ -5,22 +5,25 @@ function Body() {
     this.acceleration = createVector();
     this.force = createVector();
     this.velocity = p5.Vector.random2D();
-    this.maxspeed = 1.5;
+    this.maxspeed = random(0.2,0.8);
     this.maxforce = 0.5;
     this.r = 5;
     this.diameter = random(10, 30);
     this.speed = 1;
-    this.red = random(0,255);
-    this.green = random(0,255);
-    this.blue = random(0,255);
-    this.energy = random(0,400);
+    this.red = random(100,255);
+    this.green = random(0,40);
+    this.blue = random(100,255);
+    this.energy = random(0,800);
     this.age = 0;
+    this.pregnant = false;
+    this.dead = false;
+  
   
     this.move = function() {
         //this.x += random(-this.speed, this.speed);
         //this.y += random(-this.speed, this.speed);
         //this.position.add(this.x,this.y);
-        this.age++;
+        this.age += 0.5;
         this.acceleration.set(this.force);
         this.velocity.add(this.acceleration);
         this.velocity.limit(this.maxspeed);
@@ -44,18 +47,6 @@ function Body() {
         pop();
     };
   }
-
-Body.draw = function() {
-    fill(this.red,this.green,this.blue);
-    push();
-    beginShape();
-    translate(this.x, this.y);
-    vertex(0, -this.r * 2);
-    vertex(-this.r, this.r * 2);
-    vertex(this.r, this.r * 2);
-    endShape(CLOSE);
-    pop();
-}
 
 Body.prototype.checkwall = function() {
     var d = 10;
@@ -82,9 +73,29 @@ Body.prototype.checkwall = function() {
 
   }
 
-Body.prototype.doforce = function(foods,bodies) {
+  Body.prototype.checkpregnant = function() {
+    if (this.energy > 1000 && this.age > 50) {
+        this.pregnant = true;
+        this.energy = 500;
+    }
+  }
+
+  Body.prototype.checkdeath = function() {
+    if (this.energy <= 0) {
+        this.dead = true;
+    }
+  }
+
+Body.prototype.createforce = function(foods,bodies) {
     var lowdist = Infinity;
     var thebody = null;
+    /*
+    if(this.energy<200) {
+        this.maxspeed = 0.1;
+    } else {
+        this.maxspeed = 1;
+    }
+    */
     for (var i=0; i < bodies.length; i++) {
         if (this == bodies[i]) continue;
         //line(this.position.x,this.position.y,bodies[i].position.x,bodies[i].position.y);
@@ -92,7 +103,7 @@ Body.prototype.doforce = function(foods,bodies) {
         var dist = p5.Vector.dist(bodies[i].position,this.position);
         
         if (dist < 10) {
-            this.energy += bodies[i].energy;
+            this.energy += bodies[i].energy - bodies[i].toxity;
             bodies.splice(i,1);
             return;
         }
