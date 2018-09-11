@@ -27,7 +27,7 @@ function Food() {
 
     };
   
-    this.display = function() {
+    this.draw = function() {
       drawingContext.shadowBlur = 2;
       drawingContext.shadowColor = "green";
 
@@ -41,7 +41,7 @@ function Food() {
 
   Food.prototype.checkpregnant = function() {
     if (this.age > 600) {
-        this.pregnant = true;
+        //this.pregnant = true;
         this.age = 0;
     }
   }
