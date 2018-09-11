@@ -1,7 +1,5 @@
 function Body() {
-    this.x = random(600);
-    this.y = random(600);
-    this.position = createVector(this.x, this.y);
+    this.position = createVector(random(0,width), random(0,height));
     this.acceleration = createVector();
     this.force = createVector();
     this.velocity = p5.Vector.random2D();
@@ -75,7 +73,7 @@ Body.prototype.checkwall = function() {
 
   Body.prototype.checkpregnant = function() {
     if (this.energy > 1000 && this.age > 50) {
-        this.pregnant = true;
+        //this.pregnant = true;
         this.energy = 500;
     }
   }
@@ -86,7 +84,7 @@ Body.prototype.checkwall = function() {
     }
   }
 
-Body.prototype.createforce = function(foods,bodies) {
+Body.prototype.createforce = function(bodies,foods, bullets) {
     var lowdist = Infinity;
     var thebody = null;
     /*
@@ -96,28 +94,62 @@ Body.prototype.createforce = function(foods,bodies) {
         this.maxspeed = 1;
     }
     */
-    for (var i=0; i < bodies.length; i++) {
-        if (this == bodies[i]) continue;
-        //line(this.position.x,this.position.y,bodies[i].position.x,bodies[i].position.y);
+
+    // check distances
+    for (var i=0; i < foods.length; i++) {
+        var target = foods[i];
+
+        if (this == target)
+            continue;
+        //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
         
-        var dist = p5.Vector.dist(bodies[i].position,this.position);
+        var distance = p5.Vector.dist(target.position,this.position);
         
-        if (dist < 10) {
-            this.energy += bodies[i].energy - bodies[i].toxity;
-            bodies.splice(i,1);
+        // eat food
+        if (distance < 10) {
+            this.energy += target.energy - target.toxity;
+            foods.splice(i,1);
             return;
         }
 
-        if (dist < lowdist) {
-            lowdist = dist;
-            thebody = bodies[i];
+        // find nearest food
+        if (distance < lowdist) {
+            lowdist = distance;
+            thebody = foods[i];
         }
     }
-    if(thebody==null) return;
+
+    if(thebody==null) {
+        return;
+    }
+    var desired = p5.Vector.sub(thebody.position, this.position);
+    this.force.set(desired);
+
     text("e="+this.energy,this.position.x,this.position.y);
     //text("low="+lowdist,this.position.x,this.position.y+30);
-    var desired = p5.Vector.sub(thebody.position, this.position);
     //var steer = p5.Vector.sub(desired, this.velocity);
-    this.force.set(desired);
     //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
+
+    for (var i=0; i < bodies.length; i++) {
+        if (this == bodies[i])
+            continue;
+        
+        var distance = p5.Vector.dist(foods[i].position,this.position);
+        
+        if (distance < 10) {
+            this.energy += foods[i].energy - foods[i].toxity;
+            foods.splice(i,1);
+            return;
+        }
+
+        if (distance < lowdist) {
+            lowdist = distance;
+            thebody = foods[i];
+        }
+    }
+    if (thebody == null) {
+        return;
+    }
+    bullets.push(new Bullet(this.position, thebody.position))
+
 }

@@ -9,6 +9,7 @@ IDEAS
 
 var bodies = [];
 var foods = [];
+var bullets = [];
 var number_of_bodies = 5;
 var number_of_foods = 50;
 
@@ -42,9 +43,24 @@ function draw() {
         foods.push(new Food());
     }
 
+    //  BULLETS
+    for (var i = 0; i < bullets.length; i++) {
+        bullets[i].move();
+        if (bullets[i].checkhit(bodies)) {
+            bullets.splice(i,1);
+            continue;
+        }
+        if (bullets[i].checkwall()) {
+            bullets.splice(i,1);
+            continue;
+        }
+        bullets[i].draw();
+    }
+
+    // FOODS
     for (var i = 0; i < foods.length; i++) {
         foods[i].move();
-        foods[i].display();
+        foods[i].draw();
         foods[i].checkdeath();
         foods[i].checkpregnant();
         if(foods[i].dead) {
@@ -57,8 +73,9 @@ function draw() {
         }
     }
 
+    // ANIMALS
     for (var i = 0; i < bodies.length; i++) {
-        bodies[i].createforce(bodies,foods);
+        bodies[i].createforce(bodies,foods,bullets);
         bodies[i].checkwall();
         bodies[i].move();
         bodies[i].draw();
@@ -71,6 +88,7 @@ function draw() {
         if(bodies[i].pregnant) {
             bodies[i].pregnant = false;
             bodies.push(new Body());
+            continue;
         }
     }
 
@@ -78,4 +96,5 @@ function draw() {
     text("fps: "+frameRate(), 20, 20);
     text("bodies: "+ bodies.length,20,35);
     text("foods: "+ foods.length,20,50);
+    text("bullets: "+ bullets.length,20,65);
 }
