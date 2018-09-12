@@ -66,6 +66,7 @@ function draw() {
         bodies[i].toBehave(i);
     }
 
+
     if(debug.checked()){
       fill(0,0,0);
       text("fps: "+frameRate(), 20, 20);
