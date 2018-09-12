@@ -18,12 +18,21 @@ var number_of_foods = 2;
 
 var debug;
 
+ // body sensor setup
+
+ // How many sensors does each vehicle have?
+var totalSensors = 8;
+// How far can each vehicle see?
+var sensorLength = 150;
+// What's the angle in between sensors
+var sensorAngle = (Math.PI * 2) / totalSensors;
+
 
 function setup() {
 
     frameRate(60);
     angleMode(RADIANS);
-    var mycanvas = createCanvas(800, 800);
+    var mycanvas = createCanvas(1200, 600);
     mycanvas.parent('mycanvas');
 
     //noFill();
@@ -45,7 +54,7 @@ function setup() {
 }
 
 function draw() {
-    background(190);
+    background(0);
 
     if (random(1,100) > 98 && foods.length < 30) {
         foods.push(new Food());
@@ -68,7 +77,8 @@ function draw() {
 
 
     if(debug.checked()){
-      fill(0,0,0);
+      fill(255,0,0);
+      stroke(255,0,0);
       text("fps: "+frameRate(), 20, 20);
       text("bodies: "+ bodies.length,20,35);
       text("foods: "+ foods.length,20,50);

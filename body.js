@@ -1,3 +1,14 @@
+// This is a class for an individual sensor
+// Each vehicle will have N sensors
+class Sensor {
+    constructor(angle) {
+        // The vector describes the sensor's direction
+        this.dir = p5.Vector.fromAngle(angle);
+        // This is the sensor's reading
+        this.val = 0;
+    }
+}
+  
 function Body(x,y) {
 
     this.position = createVector(x,y);
@@ -21,6 +32,12 @@ function Body(x,y) {
     this.firerate = 0;
     this.reloadtime = random(10,40);
     this.range = 100;
+
+    // Create an array of sensors
+    this.sensors = [];
+    for (let angle = 0; angle < (Math.PI*2); angle += sensorAngle) {
+      this.sensors.push(new Sensor(angle));
+    }
 
 
     this.move = function() {
@@ -50,6 +67,22 @@ function Body(x,y) {
 
         //text("e="+this.energy,this.position.x+10,this.position.y);
         if(debug.checked()){
+
+        // draw sensors
+        fill(255,0,0);
+        stroke(255,0,0);
+        text("s:"+this.sensors.length,this.position.x+10,this.position.y+10);
+        text("d:"+this.sensors[0].dir.x,this.position.x+10,this.position.y+30);
+        text("v:"+this.sensors[0].val,this.position.x+10,this.position.y+45);
+        for (let i = 0; i < this.sensors.length; i++) {
+            let val = this.sensors[i].val;
+            if (val > 0) {
+                stroke(col);
+                strokeWeight(map(val, 0, sensorLength, 4, 0));
+                let position = this.sensors[i].dir;
+                line(0, 0, position.x * val, position.y * val);
+            }
+        }
 
             
 
@@ -135,14 +168,14 @@ Body.prototype.checkwall = function() {
 
   }
 
-  Body.prototype.checkpregnant = function() {
+Body.prototype.checkpregnant = function() {
     if (this.energy > 1000 && this.age > 50) {
         //this.pregnant = true;
         //this.energy = 500;
     }
   }
 
-  Body.prototype.checkdeath = function() {
+Body.prototype.checkdeath = function() {
     if (this.energy <= 0) {
         this.dead = true;
     }
@@ -198,6 +231,39 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
 
 }
 
+Body.prototype.readsensors = function(foods) {
+    if (foods == null) return;
+    for (var i = foods.length-1; i >= 0; i--) {
+
+        // Where is the food
+        let otherPosition = foods[i];
+
+        // How far away?
+        let dist = p5.Vector.dist(this.position, otherPosition.position);
+
+        // Skip if it's too far away
+        if (dist > sensorLength) {
+          continue;
+        }
+  
+        // What is vector pointint to food
+        let toFood = p5.Vector.sub(otherPosition.position, this.position);
+  
+        // Check all the sensors
+        for (let j = 0; j < this.sensors.length; j++) {
+
+          // If the relative angle of the food is in between the range
+          let delta = this.sensors[j].dir.angleBetween(toFood);
+
+          if (delta < sensorAngle / 2) {
+            // Sensor value is the closest food
+            text(this.sensors[j].val, 30, 50);
+            this.sensors[j].val = min(this.sensors[j].val, dist);
+          }
+        }
+      }
+}
+
 Body.prototype.shoot = function(bodies) {
     if (this.firerate <= this.reloadtime) {
         this.firerate++;
@@ -228,22 +294,24 @@ Body.prototype.shoot = function(bodies) {
     //text("firerate="+this.firerate,this.position.x,this.position.y);
 }
 
-
-Body.prototype.toBehave = function(index){
-  this.createforce(bodies,foods,bullets);
-  this.checkwall();
-  this.move();
-  this.draw();
-  this.checkdeath();
-  this.checkpregnant();
-  this.shoot(bodies);
-  if(this.dead) {
-      bodies.splice(index,1);
-      return;
-  }
-  if(this.pregnant && bodies.length < bodyLimit) {
-      this.pregnant = false;
-      bodies.push(new Body());
-      return;
-  }
+Body.prototype.toBehave = function(index) {
+    
+    this.createforce(bodies,foods,bullets);
+    this.readsensors(foods);
+    this.checkwall();
+    this.move();
+    this.draw();
+    this.checkdeath();
+    this.checkpregnant();
+    this.shoot(bodies);
+    this.readsensors();
+    if(this.dead) {
+        //bodies.splice(index,1);
+        return;
+    }
+    if(this.pregnant && bodies.length < bodyLimit) {
+        this.pregnant = false;
+        //bodies.push(new Body());
+    return;
+    }
 }
