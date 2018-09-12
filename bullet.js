@@ -36,7 +36,7 @@ function Bullet(origin, target) {
     for(var i = 0 ; i < bodies.length ; i++){
         var dist = p5.Vector.dist(this.position, bodies[i].position);
         if(dist <3){
-            bodies[i].energy -= this.damage;
+            //bodies[i].energy -= this.damage;
           return true;
         }
     }

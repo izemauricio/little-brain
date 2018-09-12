@@ -13,13 +13,16 @@ var bodyLimit = 500;
 var bodies = [];
 var foods = [];
 var bullets = [];
-var number_of_bodies = 5;
-var number_of_foods = 50;
+var number_of_bodies = 1;
+var number_of_foods = 2;
 
 var debug;
 
 
 function setup() {
+
+    frameRate(60);
+    angleMode(RADIANS);
     var mycanvas = createCanvas(800, 800);
     mycanvas.parent('mycanvas');
 

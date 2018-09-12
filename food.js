@@ -11,11 +11,13 @@ function Food() {
     this.pregnant = false;
     this.dead = false;
     this.age = random(10,500);
-    this.toxity = random(0,255);
+    this.toxity = 1;
     this.maxenergy = random(20,290);
 
     this.move = function() {
-      this.position.add(random(-this.speed, this.speed),random(-this.speed, this.speed));
+
+      // mover plantas
+      // this.position.add(random(-this.speed, this.speed),random(-this.speed, this.speed));
 
       if (this.energy< this.maxenergy) {
         this.energy += 0.05;
