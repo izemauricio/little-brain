@@ -1,5 +1,6 @@
-function Body() {
-    this.position = createVector(random(0,width), random(0,height));
+function Body(x,y) {
+
+    this.position = createVector(x,y);
     this.acceleration = createVector();
     this.force = createVector();
     this.velocity = p5.Vector.random2D();
@@ -15,8 +16,8 @@ function Body() {
     this.age = 0;
     this.pregnant = false;
     this.dead = false;
-  
-  
+
+
     this.move = function() {
         //this.x += random(-this.speed, this.speed);
         //this.y += random(-this.speed, this.speed);
@@ -29,12 +30,29 @@ function Body() {
         this.energy -= this.velocity.mag();
         this.acceleration.mult(0);
     };
-  
+
     this.draw = function() {
         //line(this.position.x,this.position.y,this.force.x,this.force.y)
-        fill(this.red,this.green,this.blue);
+
         var theta = this.velocity.heading() + PI / 2;
         push();
+
+        //text("e="+this.energy,this.position.x+10,this.position.y);
+        if(debug.checked()){
+          var reda = color(255,0,0);
+          var greena = color(0,255,0);
+          var life = map(this.energy,0,400,0,15);
+          var lifeColor = map(life,0,10,0,1);
+          //lerpcolor = Linear Interpolation for Color
+          //https://www.youtube.com/watch?v=8uLVnM36XUc
+          var barHealthColor = lerpColor(reda, greena, lifeColor);
+          fill(barHealthColor);
+          stroke(barHealthColor);
+          rect(this.position.x+15,this.position.y,4,-life);
+        }
+
+        fill(this.red,this.green,this.blue);
+        stroke(this.red,this.green,this.blue);
         translate(this.position.x, this.position.y);
         rotate(theta);
         beginShape();
@@ -47,21 +65,21 @@ function Body() {
   }
 
 Body.prototype.checkwall = function() {
-    var d = 10;
+    var d = 1;
     var desired = null;
-    
+
     if (this.position.x < d) {
       desired = createVector(this.maxspeed, this.velocity.y);
     } else if (this.position.x > width - d) {
       desired = createVector(-this.maxspeed, this.velocity.y);
     }
-  
+
     if (this.position.y < d) {
       desired = createVector(this.velocity.x, this.maxspeed);
     } else if (this.position.y > height - d) {
       desired = createVector(this.velocity.x, -this.maxspeed);
     }
-  
+
     if (desired !== null) {
       desired.setMag(this.maxspeed);
       var steer = p5.Vector.sub(desired, this.velocity);
@@ -102,9 +120,9 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
         if (this == target)
             continue;
         //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
-        
+
         var distance = p5.Vector.dist(target.position,this.position);
-        
+
         // eat food
         if (distance < 10) {
             this.energy += target.energy - target.toxity;
@@ -125,7 +143,7 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
     var desired = p5.Vector.sub(thebody.position, this.position);
     this.force.set(desired);
 
-    text("e="+this.energy,this.position.x,this.position.y);
+    //text("e="+this.energy,this.position.x,this.position.y);
     //text("low="+lowdist,this.position.x,this.position.y+30);
     //var steer = p5.Vector.sub(desired, this.velocity);
     //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
@@ -133,9 +151,9 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
     for (var i=0; i < bodies.length; i++) {
         if (this == bodies[i])
             continue;
-        
+
         var distance = p5.Vector.dist(foods[i].position,this.position);
-        
+
         if (distance < 10) {
             this.energy += foods[i].energy - foods[i].toxity;
             foods.splice(i,1);
@@ -152,4 +170,23 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
     }
     bullets.push(new Bullet(this.position, thebody.position))
 
+}
+
+
+Body.prototype.toBehave = function(index){
+  this.createforce(bodies,foods,bullets);
+  this.checkwall();
+  this.move();
+  this.draw();
+  this.checkdeath();
+  this.checkpregnant();
+  if(this.dead) {
+      bodies.splice(index,1);
+      return;
+  }
+  if(this.pregnant && bodies.length < bodyLimit) {
+      this.pregnant = false;
+      bodies.push(new Body());
+      return;
+  }
 }

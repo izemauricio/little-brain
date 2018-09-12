@@ -1,6 +1,6 @@
 function Food() {
-    this.x = random(600);
-    this.y = random(600);
+    this.x = random(1,width);
+    this.y = random(1,height);
     this.position = createVector(this.x,this.y);
     this.diameter = random(10, 30);
     this.speed = 0.2;
@@ -13,10 +13,10 @@ function Food() {
     this.age = random(10,500);
     this.toxity = random(0,255);
     this.maxenergy = random(20,290);
-  
+
     this.move = function() {
       this.position.add(random(-this.speed, this.speed),random(-this.speed, this.speed));
-      
+
       if (this.energy< this.maxenergy) {
         this.energy += 0.05;
       } else {
@@ -26,7 +26,7 @@ function Food() {
       this.age+=0.2;
 
     };
-  
+
     this.draw = function() {
       drawingContext.shadowBlur = 2;
       drawingContext.shadowColor = "green";
@@ -49,5 +49,21 @@ function Food() {
   Food.prototype.checkdeath = function() {
     if (this.energy <= 0 || this.age > 1000) {
         this.dead = true;
+    }
+  }
+
+
+  Food.prototype.toBehave = function(index){
+    this.move();
+    this.draw();
+    this.checkdeath();
+    this.checkpregnant();
+    if(this.dead) {
+        foods.splice(index,1);
+        return;
+    }
+    if(this.pregnant && foods.length < foodLimit) {
+        this.pregnant = false;
+        foods.push(new Food());
     }
   }
