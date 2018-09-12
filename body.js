@@ -4,14 +4,15 @@ class Sensor {
     constructor(angle) {
         // The vector describes the sensor's direction
         this.dir = p5.Vector.fromAngle(angle);
+
         // This is the sensor's reading
         this.val = 0;
     }
 }
-  
-function Body(x,y) {
 
-    this.position = createVector(x,y);
+function Body(x, y) {
+
+    this.position = createVector(x, y);
     this.acceleration = createVector();
     this.force = createVector();
     this.velocity = p5.Vector.random2D();
@@ -20,9 +21,9 @@ function Body(x,y) {
     this.r = 5;
     this.diameter = random(10, 30);
     this.speed = 1;
-    this.red = random(100,255);
-    this.green = random(0,40);
-    this.blue = random(100,255);
+    this.red = random(100, 255);
+    this.green = random(0, 40);
+    this.blue = random(100, 255);
     this.maxlife = 3000;
     this.energy = this.maxlife;
     this.age = 0;
@@ -30,18 +31,26 @@ function Body(x,y) {
     this.dead = false;
     this.mass = 10;
     this.firerate = 0;
-    this.reloadtime = random(10,40);
+    this.reloadtime = random(10, 40);
     this.range = 100;
+
+    
 
     // Create an array of sensors
     this.sensors = [];
-    for (let angle = 0; angle < (Math.PI*2); angle += sensorAngle) {
-      this.sensors.push(new Sensor(angle));
+    for (let angle = 0; angle < (Math.PI * 2); angle += sensorAngle) {
+        this.sensors.push(new Sensor(angle));
+    }
+
+    // All sensors start with maximum length
+    for (let j = 0; j < this.sensors.length; j++) {
+        this.sensors[j].val = sensorLength;
     }
 
 
-    this.move = function() {
-        
+    this.move = function () {
+
+
         //this.x += random(-this.speed, this.speed);
         //this.y += random(-this.speed, this.speed);
         //this.position.add(this.x,this.y);
@@ -56,132 +65,47 @@ function Body(x,y) {
         //this.energy -= this.velocity.mag();
         this.acceleration.mult(0);
     };
+}
 
-    this.draw = function() {
-
-        
-        //line(this.position.x,this.position.y,this.force.x,this.force.y)
-
-        var theta = this.velocity.heading() + PI / 2;
-        push();
-
-        //text("e="+this.energy,this.position.x+10,this.position.y);
-        if(debug.checked()){
-
-        // draw sensors
-        fill(255,0,0);
-        stroke(255,0,0);
-        text("s:"+this.sensors.length,this.position.x+10,this.position.y+10);
-        text("d:"+this.sensors[0].dir.x,this.position.x+10,this.position.y+30);
-        text("v:"+this.sensors[0].val,this.position.x+10,this.position.y+45);
-        for (let i = 0; i < this.sensors.length; i++) {
-            let val = this.sensors[i].val;
-            if (val > 0) {
-                stroke(col);
-                strokeWeight(map(val, 0, sensorLength, 4, 0));
-                let position = this.sensors[i].dir;
-                line(0, 0, position.x * val, position.y * val);
-            }
-        }
-
-            
-
-          var reda = color(255,0,0);
-          var greena = color(0,255,0);
-          var life = map(this.energy,0,this.maxlife,0,15);
-          fill(0);
-          //text("life:"+life+" / e:"+this.energy,this.position.x,this.position.y);
-          var lifeColor = map(life,0,10,0,1);
-          //lerpcolor = Linear Interpolation for Color
-          //https://www.youtube.com/watch?v=8uLVnM36XUc
-          // todo: smooth between 3 colors: red, yellow and green instead of the whole color spectrum.
-          var barHealthColor = lerpColor(reda, greena, lifeColor);
-          fill(barHealthColor);
-          stroke(barHealthColor);
-          rect(this.position.x+15,this.position.y,4,-life);
-        }
-
-        fill(this.red,this.green,this.blue);
-        stroke(this.red,this.green,this.blue);
-
-        // posiciona the body
-        translate(this.position.x, this.position.y);
-
-        // rotate the body
-        rotate(theta);
-
-        // draw the range circle
-        noFill();
-        stroke(255,0,0);
-        ellipse(0, 0, this.range*2);
-        fill(this.red,this.green,this.blue);
-        
-        /*
-        fill(0);
-        stroke(0);
-        drawingContext.shadowBlur = 10;
-        drawingContext.shadowColor = "black";
-        drawingContext.shadowOffsetX = 5;
-        drawingContext.shadowOffsetY = -5;
-        ellipse(0, 0, 5,5);
-        drawingContext.shadowBlur = 0;
-        drawingContext.shadowColor = "black";
-        drawingContext.shadowOffsetX = 0;
-        drawingContext.shadowOffsetY = 0;
-        fill(0);
-        stroke(0);
-        */
-        
-        beginShape();
-        vertex(0, -this.r * 2);
-        vertex(-this.r, this.r * 2);
-        vertex(this.r, this.r * 2);
-        endShape(CLOSE);
-        
-        
-       pop();
-    };
-  }
-
-Body.prototype.checkwall = function() {
+Body.prototype.checkwall = function () {
     var d = 1;
     var desired = null;
 
     if (this.position.x < d) {
-      desired = createVector(this.maxspeed, this.velocity.y);
+        desired = createVector(this.maxspeed, this.velocity.y);
     } else if (this.position.x > width - d) {
-      desired = createVector(-this.maxspeed, this.velocity.y);
+        desired = createVector(-this.maxspeed, this.velocity.y);
     }
 
     if (this.position.y < d) {
-      desired = createVector(this.velocity.x, this.maxspeed);
+        desired = createVector(this.velocity.x, this.maxspeed);
     } else if (this.position.y > height - d) {
-      desired = createVector(this.velocity.x, -this.maxspeed);
+        desired = createVector(this.velocity.x, -this.maxspeed);
     }
 
     if (desired !== null) {
-      desired.setMag(this.maxspeed);
-      var steer = p5.Vector.sub(desired, this.velocity);
-      steer.limit(this.maxforce);
-      this.force.set(steer);
+        desired.setMag(this.maxspeed);
+        var steer = p5.Vector.sub(desired, this.velocity);
+        steer.limit(this.maxforce);
+        this.force.set(steer);
     }
 
-  }
+}
 
-Body.prototype.checkpregnant = function() {
+Body.prototype.checkpregnant = function () {
     if (this.energy > 1000 && this.age > 50) {
         //this.pregnant = true;
         //this.energy = 500;
     }
-  }
+}
 
-Body.prototype.checkdeath = function() {
+Body.prototype.checkdeath = function () {
     if (this.energy <= 0) {
         this.dead = true;
     }
-  }
+}
 
-Body.prototype.createforce = function(bodies,foods, bullets) {
+Body.prototype.createforce = function (bodies, foods, bullets) {
     var lowdist = Infinity;
     var thebody = null;
     /*
@@ -193,19 +117,19 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
     */
 
     // check food distances
-    for (var i=0; i < foods.length; i++) {
+    for (var i = 0; i < foods.length; i++) {
         var target = foods[i];
 
         if (this == target)
             continue;
         //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
 
-        var distance = p5.Vector.dist(target.position,this.position);
+        var distance = p5.Vector.dist(target.position, this.position);
 
         // eat food
         if (distance < 30) {
             //this.energy += target.energy - target.toxity;
-            foods.splice(i,1);
+            foods.splice(i, 1);
             return;
         }
 
@@ -216,7 +140,7 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
         }
     }
 
-    if(thebody==null) {
+    if (thebody == null) {
         return;
     }
     var desired = p5.Vector.sub(thebody.position, this.position);
@@ -227,13 +151,12 @@ Body.prototype.createforce = function(bodies,foods, bullets) {
     //var steer = p5.Vector.sub(desired, this.velocity);
     //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
 
-    
+
 
 }
 
-Body.prototype.readsensors = function(foods) {
-    if (foods == null) return;
-    for (var i = foods.length-1; i >= 0; i--) {
+Body.prototype.readsensors = function (foods) {
+    for (var i = foods.length - 1; i >= 0; i--) {
 
         // Where is the food
         let otherPosition = foods[i];
@@ -241,30 +164,33 @@ Body.prototype.readsensors = function(foods) {
         // How far away?
         let dist = p5.Vector.dist(this.position, otherPosition.position);
 
+
+
         // Skip if it's too far away
         if (dist > sensorLength) {
-          continue;
+            continue;
         }
-  
+
         // What is vector pointint to food
         let toFood = p5.Vector.sub(otherPosition.position, this.position);
-  
+
         // Check all the sensors
         for (let j = 0; j < this.sensors.length; j++) {
 
-          // If the relative angle of the food is in between the range
-          let delta = this.sensors[j].dir.angleBetween(toFood);
+            // If the relative angle of the food is in between the range
+            let delta = this.sensors[j].dir.angleBetween(toFood);
 
-          if (delta < sensorAngle / 2) {
-            // Sensor value is the closest food
-            text(this.sensors[j].val, 30, 50);
-            this.sensors[j].val = min(this.sensors[j].val, dist);
-          }
+            if (delta < sensorAngle / 2) {
+
+                // Sensor value is the closest food
+                this.sensors[j].val = min(this.sensors[j].val, dist);
+
+            }
         }
-      }
+    }
 }
 
-Body.prototype.shoot = function(bodies) {
+Body.prototype.shoot = function (bodies) {
     if (this.firerate <= this.reloadtime) {
         this.firerate++;
     }
@@ -273,11 +199,11 @@ Body.prototype.shoot = function(bodies) {
     var thebody = null;
 
     // check bodies distance
-    for (var i=0; i < bodies.length; i++) {
+    for (var i = 0; i < bodies.length; i++) {
         if (this == bodies[i])
             continue;
 
-        var distance = p5.Vector.dist(bodies[i].position,this.position);
+        var distance = p5.Vector.dist(bodies[i].position, this.position);
 
         if (distance < lowdist) {
             lowdist = distance;
@@ -294,9 +220,9 @@ Body.prototype.shoot = function(bodies) {
     //text("firerate="+this.firerate,this.position.x,this.position.y);
 }
 
-Body.prototype.toBehave = function(index) {
-    
-    this.createforce(bodies,foods,bullets);
+Body.prototype.toBehave = function (index) {
+
+    this.createforce(bodies, foods, bullets);
     this.readsensors(foods);
     this.checkwall();
     this.move();
@@ -304,14 +230,104 @@ Body.prototype.toBehave = function(index) {
     this.checkdeath();
     this.checkpregnant();
     this.shoot(bodies);
-    this.readsensors();
-    if(this.dead) {
+    if (this.dead) {
         //bodies.splice(index,1);
         return;
     }
-    if(this.pregnant && bodies.length < bodyLimit) {
+    if (this.pregnant && bodies.length < bodyLimit) {
         this.pregnant = false;
         //bodies.push(new Body());
-    return;
+        return;
     }
+}
+
+
+
+
+
+Body.prototype.draw = function () {
+
+    var theta = this.velocity.heading() + PI / 2;
+
+    push();
+
+    if (debug.checked()) {
+    }
+
+
+    // BARRA DE VIDA
+    /*
+    var reda = color(255, 0, 0);
+    var greena = color(0, 255, 0);
+    var life = map(this.energy, 0, this.maxlife, 0, 15);
+    fill(0);
+    //text("life:"+life+" / e:"+this.energy,this.position.x,this.position.y);
+    var lifeColor = map(life, 0, 10, 0, 1);
+    //lerpcolor = Linear Interpolation for Color
+    //https://www.youtube.com/watch?v=8uLVnM36XUc
+    // todo: smooth between 3 colors: red, yellow and green instead of the whole color spectrum.
+    var barHealthColor = lerpColor(reda, greena, lifeColor);
+    fill(barHealthColor);
+    stroke(barHealthColor);
+    rect(this.position.x + 15, this.position.y, 4, -life);
+    */
+
+
+    /*
+    fill(0);
+    stroke(0);
+    drawingContext.shadowBlur = 10;
+    drawingContext.shadowColor = "black";
+    drawingContext.shadowOffsetX = 5;
+    drawingContext.shadowOffsetY = -5;
+    ellipse(0, 0, 5,5);
+    drawingContext.shadowBlur = 0;
+    drawingContext.shadowColor = "black";
+    drawingContext.shadowOffsetX = 0;
+    drawingContext.shadowOffsetY = 0;
+    fill(0);
+    stroke(0);
+    */
+
+    // draw sensors
+    fill(255, 255, 255);
+    stroke(255, 255, 255);
+    for (let i = 0; i < this.sensors.length; i++) {
+        let position2 = this.sensors[i].dir;
+        let val = this.sensors[i].val;
+        if (val > 0) {
+            //strokeWeight(map(val, 0, sensorLength, 4, 0));  
+            let position = this.sensors[i].dir;
+            fill(255, 255, 0);
+            stroke(255, 255, 0);
+            line(this.position.x, this.position.y, position2.x * val, position2.y * val);
+            text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
+        }
+
+    }
+
+    // posiciona the body
+    translate(this.position.x, this.position.y);
+
+    // rotate the body
+    rotate(theta);
+
+    
+
+    // draw the range circle
+    noFill();
+    stroke(255, 0, 0);
+    ellipse(0, 0, this.range * 2);
+    fill(this.red, this.green, this.blue);
+
+    fill(this.red, this.green, this.blue);
+    stroke(this.red, this.green, this.blue);
+
+    beginShape();
+    vertex(0, -this.r * 2);
+    vertex(-this.r, this.r * 2);
+    vertex(this.r, this.r * 2);
+    endShape(CLOSE);
+
+    pop();
 }

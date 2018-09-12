@@ -14,14 +14,14 @@ var bodies = [];
 var foods = [];
 var bullets = [];
 var number_of_bodies = 1;
-var number_of_foods = 2;
+var number_of_foods = 10;
 
 var debug;
 
  // body sensor setup
 
  // How many sensors does each vehicle have?
-var totalSensors = 8;
+var totalSensors = 2;
 // How far can each vehicle see?
 var sensorLength = 150;
 // What's the angle in between sensors

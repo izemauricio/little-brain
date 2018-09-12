@@ -19,6 +19,7 @@ function Food() {
       // mover plantas
       // this.position.add(random(-this.speed, this.speed),random(-this.speed, this.speed));
 
+      /*
       if (this.energy< this.maxenergy) {
         this.energy += 0.05;
       } else {
@@ -26,6 +27,7 @@ function Food() {
       }
 
       this.age+=0.2;
+      */
 
     };
 
@@ -61,11 +63,11 @@ function Food() {
     this.checkdeath();
     this.checkpregnant();
     if(this.dead) {
-        foods.splice(index,1);
+        //foods.splice(index,1);
         return;
     }
     if(this.pregnant && foods.length < foodLimit) {
         this.pregnant = false;
-        foods.push(new Food());
+        //foods.push(new Food());
     }
   }
