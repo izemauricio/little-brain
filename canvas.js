@@ -1,13 +1,3 @@
-/*
-IDEAS
-
-1. dna should tell: how fast, how strong, the gun power, the capacity-of-reading-food-toxity (0 to 1), vision power, etc
-2. we need find a equilibrium between # of death and # of birth
-3.
-
-*/
-
-
 var foodLimit = 70;
 var bodyLimit = 500;
 var bodies = [];
@@ -15,21 +5,9 @@ var foods = [];
 var bullets = [];
 var number_of_bodies = 1;
 var number_of_foods = 10;
-
 var debug;
 
- // body sensor setup
-
- // How many sensors does each vehicle have?
-var totalSensors = 2;
-// How far can each vehicle see?
-var sensorLength = 150;
-// What's the angle in between sensors
-var sensorAngle = (Math.PI * 2) / totalSensors;
-
-
 function setup() {
-
     frameRate(60);
     angleMode(RADIANS);
     var mycanvas = createCanvas(1200, 600);
@@ -54,7 +32,7 @@ function setup() {
 }
 
 function draw() {
-    background(0);
+    background(20);
 
     if (random(1,100) > 98 && foods.length < 30) {
         foods.push(new Food());
@@ -77,12 +55,20 @@ function draw() {
 
 
     if(debug.checked()){
-      fill(255,0,0);
-      stroke(255,0,0);
-      text("fps: "+frameRate(), 20, 20);
-      text("bodies: "+ bodies.length,20,35);
-      text("foods: "+ foods.length,20,50);
-      text("bullets: "+ bullets.length,20,65);
+      strokeWeight(1);
+
+      stroke(0);
+      fill(0);
+      
+      rect(0,0,105,90);
+
+      stroke(255,250,255);
+      noFill();
+      
+      text("FPS: "+frameRate().toFixed(0), 20, 20);
+      text("BODIES: "+ bodies.length,20,40);
+      text("FOODS: "+ foods.length,20,60);
+      text("BULLETS: "+ bullets.length,20,80);
     }
 
 }
