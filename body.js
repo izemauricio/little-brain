@@ -34,7 +34,7 @@ function Body(x, y) {
     this.reloadtime = random(10, 40);
     this.range = 100;
 
-    
+
 
     // Create an array of sensors
     this.sensors = [];
@@ -296,11 +296,11 @@ Body.prototype.draw = function () {
         let position2 = this.sensors[i].dir;
         let val = this.sensors[i].val;
         if (val > 0) {
-            //strokeWeight(map(val, 0, sensorLength, 4, 0));  
+            //strokeWeight(map(val, 0, sensorLength, 4, 0));
             let position = this.sensors[i].dir;
             fill(255, 255, 0);
             stroke(255, 255, 0);
-            line(this.position.x, this.position.y, position2.x * val, position2.y * val);
+            line(this.position.x, this.position.y, this.position.x + position2.x * val,this.position.y+ position2.y * val);
             text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
         }
 
@@ -312,7 +312,7 @@ Body.prototype.draw = function () {
     // rotate the body
     rotate(theta);
 
-    
+
 
     // draw the range circle
     noFill();
