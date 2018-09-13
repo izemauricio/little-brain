@@ -13,7 +13,7 @@ class Sensor {
 
  // body sensor setup
  // How many sensors does each vehicle have?
- var totalSensors = 6;
+ var totalSensors = 20;
  // How far can each vehicle see?
  var sensor_power = 150;
  // What's the angle in between sensors
@@ -165,6 +165,12 @@ class Body {
             if (distance < 30) {
                 //this.energy += target.energy - target.toxity;
                 foods.splice(i, 1);
+
+                // restore sensors
+                for (let k=0; k<this.sensors.length; k++) {
+                    this.sensors[k].val = sensor_power;
+                }
+
                 return;
             }
     
@@ -204,6 +210,9 @@ class Body {
     
             // vector to food
             let toFood = p5.Vector.sub(myfood.position, this.position);
+            stroke(133);
+            noFill();
+            line(myfood.position.x,myfood.position.y,this.position.x,this.position.y);
 
             // normalized vector direction to food
     
@@ -212,10 +221,15 @@ class Body {
 
                 // If the relative angle of the food is in between the range
                 let delta = this.sensors[j].dir.angleBetween(toFood);
+
+                stroke(255,0,0);
+                line(this.position.x,this.position.y,this.position.x + delta.x * 100,this.position.y + delta.y * 100);
     
                 if (delta < sensorAngle / 2) {
                     // Sensor value is the closest food
                     this.sensors[j].val = min(this.sensors[j].val, distance);
+
+                    
                 }
             }
         }
@@ -293,20 +307,22 @@ class Body {
     }
 
     drawSensorLines() {
-        drawingContext.shadowBlur = 3;
+        drawingContext.shadowBlur = 5;
         drawingContext.shadowColor = "cyan";
-        fill(255, 255, 255);
+        //fill(255, 255, 255);
+        noFill();
         stroke(255, 255, 255);
+
         for (let i = 0; i < this.sensors.length; i++) {
-            let position2 = this.sensors[i].dir;
             let val = this.sensors[i].val;
+            let pos = this.sensors[i].dir;
+
             if (val > 0) {
-                let position = this.sensors[i].dir;
                 //strokeWeight(map(val, 0, sensor_power, 4, 1));
                 //drawingContext.shadowBlur = map(val, 0, sensorLength, 6, 1);
-                fill(5, 130, 240);
-                stroke(5, 130, 240);
-                line(this.position.x, this.position.y, this.position.x + position2.x * val,this.position.y+ position2.y * val);
+
+                line(this.position.x, this.position.y, this.position.x + pos.x * val,this.position.y + pos.y * val);
+                
                 //text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
             }
         }
@@ -315,17 +331,19 @@ class Body {
     drawRangeCircle() {
         noFill();
         stroke(200, 0, 0);
-        strokeWeight(2);
+        strokeWeight(1);
         drawingContext.shadowBlur = 0;
-        ellipse(0, 0, this.range * 2);
-        fill(this.red, this.green, this.blue);
+
+        ellipse(this.position.x, this.position.y, sensor_power* 2);
     }
 
     drawBody() {
         // color
-        fill(200,140,170);
-        stroke(200,140,170);
-        strokeWeight(2);
+        drawingContext.shadowBlur = 0;
+        fill(255,255,0);
+        //noFill();
+        stroke(255,255,255);
+        strokeWeight(1);
 
         // shape
         beginShape();
