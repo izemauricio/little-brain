@@ -13,7 +13,7 @@ class Sensor {
 
  // body sensor setup
  // How many sensors does each vehicle have?
- var totalSensors = 20;
+ var totalSensors = 12;
  // How far can each vehicle see?
  var sensor_power = 150;
  // What's the angle in between sensors
@@ -72,7 +72,8 @@ class Body {
 
     toBehave(index) {
         this.createforce(bodies, foods, bullets);
-        this.readsensors(foods);
+        //this.readsensors(foods);
+        this.updateSensors(foods);
         this.checkwall();
         this.move();
         this.draw();
@@ -141,6 +142,13 @@ class Body {
     }
 
     createforce(bodies, foods, bullets) {
+
+        let mouse = createVector(mouseX, mouseY);
+        this.force = p5.Vector.sub(mouse,this.position);
+
+
+
+        
         var lowdist = Infinity;
         var thebody = null;
         /*
@@ -151,6 +159,7 @@ class Body {
         }
         */
     
+        /*
         // check food distances
         for (var i = 0; i < foods.length; i++) {
             var target = foods[i];
@@ -185,13 +194,58 @@ class Body {
             return;
         }
         var desired = p5.Vector.sub(thebody.position, this.position);
-        this.force.set(desired);
+        this.force.set(desired); */
     
         //text("e="+this.energy,this.position.x,this.position.y);
         //text("low="+lowdist,this.position.x,this.position.y+30);
         //var steer = p5.Vector.sub(desired, this.velocity);
         //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
+
+        
     
+    }
+
+    updateSensors(foods) {
+        // for each sensor, check if there is a food in the sensor fov
+        for (let i=0; i<this.sensors.length; i++) {
+            let mysensor = this.sensors[i];
+
+            // find the nearest food that is the sensor field of view
+            let nearestFood = null;
+            let nearestDist = 9999;
+            for (let j=0; j<foods.length; j++) {
+                let myfood = foods[j];
+
+                let distance = p5.Vector.dist(this.position, myfood.position);
+
+                let toFood = p5.Vector.sub(myfood.position, this.position);
+
+                let delta = mysensor.dir.angleBetween(toFood);
+
+                // check if food is in the sensor fov
+                if (delta > sensorAngle / 2) {
+                    continue;
+                }
+
+                // check if food is near enough
+                if (distance > sensor_power) {
+                    continue;
+                }
+
+                // check if this is the neasrest so far
+                if (distance < nearestDist) {
+                    nearestFood = myfood;
+                    nearestDist = distance;
+                }
+            }
+            
+            if (nearestDist < sensor_power) {
+                mysensor.val = nearestDist;
+            } else {
+                mysensor.val = sensor_power;
+            }
+            
+        }
     }
     
     readsensors(foods) {
@@ -210,6 +264,7 @@ class Body {
     
             // vector to food
             let toFood = p5.Vector.sub(myfood.position, this.position);
+
             stroke(133);
             noFill();
             line(myfood.position.x,myfood.position.y,this.position.x,this.position.y);
@@ -227,9 +282,11 @@ class Body {
     
                 if (delta < sensorAngle / 2) {
                     // Sensor value is the closest food
-                    this.sensors[j].val = min(this.sensors[j].val, distance);
-
+                    //this.sensors[j].val = min(this.sensors[j].val, distance);
+                    this.sensors[j].val = distance;
                     
+                } else {
+                    this.sensors[j].val = sensor_power;
                 }
             }
         }
@@ -342,7 +399,7 @@ class Body {
         drawingContext.shadowBlur = 0;
         fill(255,255,0);
         //noFill();
-        stroke(255,255,255);
+        stroke(255,255,255  );
         strokeWeight(1);
 
         // shape

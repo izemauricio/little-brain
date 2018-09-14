@@ -40,11 +40,13 @@ class Food {
     ellipse(this.position.x, this.position.y, this.nutrition, this.nutrition);
 
     // nice draw
+    /*
     noFill();
     stroke(50, 50, 0);
     for (let i=this.nutrition; i>=1; i-=7) {
       ellipse(this.position.x, this.position.y, i, i);
     }
+    */
   }
 
   check_pregnant() {

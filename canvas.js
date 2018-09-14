@@ -75,5 +75,5 @@ function draw() {
 
 // Add new vehicles by dragging mouse
 function mouseClicked() {
-  bodies.push(new Body(mouseX, mouseY));
+  //bodies.push(new Body(mouseX, mouseY));
 }
