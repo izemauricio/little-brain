@@ -22,7 +22,7 @@ class Sensor {
 class Body {
     constructor(x,y) {
         // brain
-        this.brain = new NeuralNetwork(inputs, 32, 2);
+        //this.brain = new NeuralNetwork(inputs, 32, 2);
 
         // position and size
         this.position = createVector(x,y);
@@ -144,7 +144,7 @@ class Body {
     }
 
     createforce(bodies, foods, bullets) {
-        
+
         // BRAIN MODE
         // inputs
         /*
