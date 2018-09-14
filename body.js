@@ -21,6 +21,8 @@ class Sensor {
 
 class Body {
     constructor(x,y) {
+        // brain
+        this.brain = new NeuralNetwork(inputs, 32, 2);
 
         // position and size
         this.position = createVector(x,y);
@@ -142,15 +144,28 @@ class Body {
     }
 
     createforce(bodies, foods, bullets) {
-
-        let mouse = createVector(mouseX, mouseY);
-        this.force = p5.Vector.sub(mouse,this.position);
-
-
-
         
-        var lowdist = Infinity;
-        var thebody = null;
+        // BRAIN MODE
+        // inputs
+        /*
+        let inputs = [];
+        for (let j = 0; j < this.sensors.length; j++) {
+            inputs[j + 6] = map(this.sensors[j].val, 0, sensor_power, 1, 0); // mapeia val (0,150) to (1,0)
+        }
+        let outputs = this.brain.predict(inputs);
+        let desired = createVector(2 * outputs[0] - 1, 2 * outputs[1] - 1);
+        let steer = p5.Vector.sub(desired, this.velocity); // Craig Reynolds steering formula
+        steer.limit(this.maxforce);
+        this.force = steer;
+        */
+
+        // MOUSE MODE
+        //let mouse = createVector(mouseX, mouseY);
+        //this.force = p5.Vector.sub(mouse,this.position);
+        
+        // GOD MODE
+        //var lowdist = Infinity;
+        //var thebody = null;
         /*
         if(this.energy<200) {
             this.maxspeed = 0.1;
