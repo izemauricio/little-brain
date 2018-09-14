@@ -13,7 +13,7 @@ class Sensor {
 
  // body sensor setup
  // How many sensors does each vehicle have?
- var totalSensors = 12;
+ var totalSensors = 8;
  // How far can each vehicle see?
  var sensor_power = 150;
  // What's the angle in between sensors
