@@ -29,7 +29,7 @@ constructor(a, b) {
 let sigmoid = new ActivationFunction(x => 1 / (1 + Math.exp(-x)),y => y * (1 - y));
 let tanh = new ActivationFunction(x => Math.tanh(x),y => 1 - (y * y));
 
-class Matrix {
+/*class Matrix {
     constructor(rows, cols) {
       this.rows = rows;
       this.cols = cols;
@@ -38,7 +38,7 @@ class Matrix {
     randomize() {
         return this.map(e => Math.random() * 2 - 1);
     }
-   
+
     map(f) {
         // Apply new_val = function(old_val,i,j) to every element (i,j) of matrix
         for (let i = 0; i < this.rows; i++) {
@@ -49,4 +49,4 @@ class Matrix {
         }
         return this;
     }
-}
+}*/

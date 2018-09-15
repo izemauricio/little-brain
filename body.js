@@ -29,7 +29,7 @@ class Body {
         this.diameter = random(10, 30);
         this.r = 5;
 
-        // color 
+        // color
         this.red = random(100, 255);
         this.green = random(0, 40);
         this.blue = random(100, 255);
@@ -40,7 +40,7 @@ class Body {
         this.velocity = p5.Vector.random2D();
         this.maxspeed = 1;
         this.maxforce = 0.05;
-        
+
         // status
         this.energy = this.maxlife;
         this.speed = 1;
@@ -51,7 +51,7 @@ class Body {
 
         // rates and limits
         this.maxlife = 3000;
-        
+
         // shoot
         this.firerate = 0;
         this.reloadtime = random(10, 40);
@@ -59,7 +59,6 @@ class Body {
 
         // vision
         this.sensors = [];
-
         // Create an array of sensors
         for (let angle = 0; angle < (Math.PI * 2); angle += sensorAngle) {
             this.sensors.push(new Sensor(angle));
@@ -70,12 +69,22 @@ class Body {
             this.sensors[j].val = sensor_power;
         }
 
+
+        this.brain = new NeuralNetworkW(this.sensors.length, 32 , 2);
+        this.output =[];
+
     }
 
     toBehave(index) {
         this.createforce(bodies, foods, bullets);
         //this.readsensors(foods);
         this.updateSensors(foods);
+
+        let inputs = [];
+        for(var i = 0 ; i < this.sensors.length; i++){
+          inputs.push(map(this.sensors[i].val, 0, sensor_power, 0, 1));
+        }
+        this.output = this.brain.supletivo(inputs);
         this.checkwall();
         this.move();
         this.draw();
@@ -160,9 +169,9 @@ class Body {
         */
 
         // MOUSE MODE
-        //let mouse = createVector(mouseX, mouseY);
-        //this.force = p5.Vector.sub(mouse,this.position);
-        
+        let mouse = createVector(mouseX, mouseY);
+        this.force = p5.Vector.sub(mouse,this.position);
+
         // GOD MODE
         //var lowdist = Infinity;
         //var thebody = null;
@@ -173,18 +182,18 @@ class Body {
             this.maxspeed = 1;
         }
         */
-    
+
         /*
         // check food distances
         for (var i = 0; i < foods.length; i++) {
             var target = foods[i];
-    
+
             if (this == target)
                 continue;
             //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
-    
+
             var distance = p5.Vector.dist(target.position, this.position);
-    
+
             // eat food
             if (distance < 30) {
                 //this.energy += target.energy - target.toxity;
@@ -197,27 +206,27 @@ class Body {
 
                 return;
             }
-    
+
             // find nearest food
             if (distance < lowdist) {
                 lowdist = distance;
                 thebody = foods[i];
             }
         }
-    
+
         if (thebody == null) {
             return;
         }
         var desired = p5.Vector.sub(thebody.position, this.position);
         this.force.set(desired); */
-    
+
         //text("e="+this.energy,this.position.x,this.position.y);
         //text("low="+lowdist,this.position.x,this.position.y+30);
         //var steer = p5.Vector.sub(desired, this.velocity);
         //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
 
-        
-    
+
+
     }
 
     updateSensors(foods) {
@@ -253,30 +262,30 @@ class Body {
                     nearestDist = distance;
                 }
             }
-            
+
             if (nearestDist < sensor_power) {
                 mysensor.val = nearestDist;
             } else {
                 mysensor.val = sensor_power;
             }
-            
+
         }
     }
-    
+
     readsensors(foods) {
         for (var i = foods.length - 1; i >= 0; i--) {
 
             // the food
             let myfood = foods[i];
-    
+
             // how far is food
             let distance = p5.Vector.dist(this.position, myfood.position);
-    
+
             // skip if food is too far away
             if (distance > sensor_power) {
                 continue;
             }
-    
+
             // vector to food
             let toFood = p5.Vector.sub(myfood.position, this.position);
 
@@ -285,7 +294,7 @@ class Body {
             line(myfood.position.x,myfood.position.y,this.position.x,this.position.y);
 
             // normalized vector direction to food
-    
+
             // check all body sensors
             for (let j = 0; j < this.sensors.length; j++) {
 
@@ -294,34 +303,34 @@ class Body {
 
                 stroke(255,0,0);
                 line(this.position.x,this.position.y,this.position.x + delta.x * 100,this.position.y + delta.y * 100);
-    
+
                 if (delta < sensorAngle / 2) {
                     // Sensor value is the closest food
                     //this.sensors[j].val = min(this.sensors[j].val, distance);
                     this.sensors[j].val = distance;
-                    
+
                 } else {
                     this.sensors[j].val = sensor_power;
                 }
             }
         }
     }
-    
+
     shoot(bodies) {
         if (this.firerate <= this.reloadtime) {
             this.firerate++;
         }
-    
+
         var lowdist = Infinity;
         var thebody = null;
-    
+
         // check bodies distance
         for (var i = 0; i < bodies.length; i++) {
             if (this == bodies[i])
                 continue;
-    
+
             var distance = p5.Vector.dist(bodies[i].position, this.position);
-    
+
             if (distance < lowdist) {
                 lowdist = distance;
                 thebody = bodies[i];
@@ -336,13 +345,13 @@ class Body {
         }
         //text("firerate="+this.firerate,this.position.x,this.position.y);
     }
-    
+
     draw() {
         // angle of the vector velocity + 90 graus
         var theta = this.velocity.heading() + (PI/2);
-    
+
         push();
-    
+
         if (debug.checked()) {
             this.drawLifeBar();
             this.drawSensorLines();
@@ -351,13 +360,13 @@ class Body {
 
         // posiciona the body
         translate(this.position.x, this.position.y);
-    
+
         // rotate the body
         rotate(theta);
-    
+
         // draw the body
         this.drawBody();
-    
+
         pop();
     }
 
@@ -394,7 +403,7 @@ class Body {
                 //drawingContext.shadowBlur = map(val, 0, sensorLength, 6, 1);
 
                 line(this.position.x, this.position.y, this.position.x + pos.x * val,this.position.y + pos.y * val);
-                
+
                 //text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
             }
         }
