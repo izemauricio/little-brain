@@ -4,13 +4,19 @@ var bodies = [];
 var foods = [];
 var bullets = [];
 var number_of_bodies = 1;
-var number_of_foods = 10;
+var number_of_foods = 30;
 var debug;
 
 let sensor0, sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7;
 let padding_sensor = 15;
 let padding_right = 100;
 
+// Slider to speed up simulation
+let speedSlider;
+let speedSpan;
+
+//Best body so far
+let best = null;
 
 function setup() {
     frameRate(60);
@@ -35,55 +41,75 @@ function setup() {
 
     debug = select('#debug');
 
-    sensor0 = createElement('p','0' );
-    sensor0.position(canvas.width+10,0*padding_sensor);
-    sensor1 = createElement('p','0' );
-    sensor1.position(canvas.width+10,1*padding_sensor);
-
-    sensor2 = createElement('p','0' );
-    sensor2.position(canvas.width+10,2*padding_sensor);
-    sensor3 = createElement('p','0' );
-    sensor3.position(canvas.width+10,3*padding_sensor);
-
-    sensor4 = createElement('p','0' );
-    sensor4.position(canvas.width+10,4*padding_sensor);
-    sensor5 = createElement('p','0' );
-    sensor5.position(canvas.width+10,5*padding_sensor);
-
-    sensor6 = createElement('p','0' );
-    sensor6.position(canvas.width+10,6*padding_sensor);
-    sensor7 = createElement('p','0' );
-    sensor7.position(canvas.width+10,7*padding_sensor);
 
     output1 = createElement('p','0' );
     output1.position(canvas.width+10+ 1*padding_right ,0*padding_sensor);
     output2 = createElement('p','0' );
     output2.position(canvas.width+10+ 1*padding_right ,1*padding_sensor);
 
+    speedSlider = select('#speedSlider');
+    speedSpan = select('#speed');
 
 }
 
 function draw() {
     background(20);
 
-    if (random(1,100) > 98 && foods.length < 30) {
-        foods.push(new Food());
-    }
+    // How fast should we speed up
+    let cycles = speedSlider.value();
+    speedSpan.html(cycles);
 
-    //  BULLETS
-    for (var i = 0; i < bullets.length; i++) {
-        bullets[i].toBehave(i);
-    }
+    for(var j = 0 ; j < cycles ; j++){
+      if (random(1,100) > 98 && foods.length < 30) {
+          foods.push(new Food());
+      }
 
-    // FOODS
-    for (var i = foods.length-1; i >= 0; i--) {
-        foods[i].toBehave(i);
-    }
+      //  BULLETS
+  //    for (var i = 0; i < bullets.length; i++) {
+      //    bullets[i].toBehave(i);
+    //  }
 
-    // ANIMALS
-    for (var i = bodies.length-1; i >= 0; i--) {
-        bodies[i].toBehave(i);
-    }
+      // FOODS
+      for (var i = foods.length-1; i >= 0; i--) {
+          foods[i].toBehave(i);
+      }
+
+      // ANIMALS
+      let record = -1;
+      for (var i = bodies.length-1; i >= 0; i--) {
+          if(bodies[i].isDead()){
+            bodies.splice(i,1);
+            continue;
+          }
+          let aBody = bodies[i];
+          aBody.toBehave(i);
+          if (aBody.score > record) {
+            record = aBody.score;
+            best = aBody;
+          }
+      }
+
+      // If there is less than 20 apply reproduction
+      if (bodies.length < 20) {
+        for (let b of bodies) {
+          // Every vehicle has a chance of cloning itself according to score
+          // Argument to "clone" is probability
+          let newVehicle = b.reproduce(0.1 * b.score / record);
+          // If there is a child
+          if (newVehicle != null) {
+            bodies.push(newVehicle);
+          }
+        }
+      }
+  }
+
+  for (var i = bodies.length-1; i >= 0; i--) {
+      bodies[i].draw();
+  }
+
+  for (var i = foods.length-1; i >= 0; i--) {
+      foods[i].draw();
+  }
 
 
     if(debug.checked()){
@@ -103,23 +129,38 @@ function draw() {
       text("BULLETS: "+ bullets.length,20,80);
     }
 
-    sensor0.html("sensor_0: "  );
-    sensor1.html("sensor_1: "  );
-    sensor2.html("sensor_2: "  );
-    sensor3.html("sensor_3: "  );
-    sensor4.html("sensor_4: "  );
-    sensor5.html("sensor_5: "  );
-    sensor6.html("sensor_6: "  );
-    sensor7.html("sensor_7: "  );
 
-    output1.html("output1: " + bodies[0].output[0] );
-    output2.html("output2: " + bodies[0].output[1] );
+  //  output1.html("output1: " + (bodies[0].outputDebug[0]*2 -1) );
+    //output2.html("output2: " + (bodies[0].outputDebug[1]*2  -1) );
 
-    stroke(255,255,0);
-    noFill();
-    line(bodies[0].position.x,bodies[0].position.y,
-      bodies[0].position.x+ bodies[0].output[0]*200,bodies[0].position.y + bodies[0].output[1]*200);
+    //output1.html("output1: " + bodies[0].output[0]);
+    //output2.html("output2: " + bodies[0].output[1]);
 
+  //  stroke(255,255,0);
+//    noFill();
+  //  line(bodies[0].position.x,bodies[0].position.y,
+    //  bodies[0].position.x+ bodies[0].output[0]*20,bodies[0].position.y + bodies[0].output[1]*20);
+      //line(bodies[0].position.x,bodies[0].position.y,
+      //  bodies[0].position.x+ (bodies[0].outputDebug[0]*2 -1),bodies[0].position.y + (bodies[0].outputDebug[1]*2  -1));
+
+}
+
+function circleWorld(obj){
+  if(obj.position.x <0){
+    obj.position.x = width - obj.position.x*-1
+  }
+
+    if(obj.position.x >width){
+      obj.position.x = (obj.position.x-width)
+    }
+
+    if(obj.position.y <0){
+      obj.position.y = height - obj.position.y*-1
+    }
+
+    if(obj.position.y >height){
+      obj.position.y = (obj.position.y-height)
+    }
 }
 
 // Add new vehicles by dragging mouse

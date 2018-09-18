@@ -9,7 +9,7 @@ class Food {
     this.r = random(0, 50);
     this.g = random(0, 255);
     this.b = random(0, 50);
-    
+
     // status
     this.energy = random(50, 300);
     this.pregnant = false;
@@ -17,7 +17,7 @@ class Food {
     this.age = random(10, 500);
     this.nutrition = random(1, 9);
     this.toxity = 1;
-    
+
     // rates and limits
     this.GROW_RATE = random(0.01,0.4);
     this.maxenergy = random(20, 290);
@@ -58,15 +58,16 @@ class Food {
 
   check_death() {
     if (this.energy <= 0 || this.age > 1000) {
-      this.dead = true;
+      return true;
     }
+    return false;
   }
 
   grow(index) {
     for (var i = 0; i < foods.length; i++) {
-      if (i == index) 
+      if (i == index)
         continue;
-  
+
       var distance = p5.Vector.sub(foods[i].position, this.position);
       if (distance.mag() < foods[i].nutrition / 2 + this.nutrition / 2 + 1) {
         return;
@@ -81,10 +82,10 @@ class Food {
   outOfBoundaries() {
     var raio = this.nutirion / 2;
   }
-  
+
   toBehave(index) {
     this.move();
-    this.draw();
+    //this.draw();
     this.check_death();
     this.check_pregnant();
     this.grow(index);

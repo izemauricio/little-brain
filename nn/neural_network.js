@@ -1,6 +1,8 @@
 function sigmoidw(x){
-  var res = 1 / (1 + Math.exp(-x));
-  return map(x, 0, 1, -1, 1);
+//  var res = 1 / (1 + Math.exp(-x));
+//  return map(x, 0, 1, -1, 1);
+
+  return 1 / (1 + Math.exp(-x));
 }
 
 class NeuralNetworkW{

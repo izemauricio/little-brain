@@ -1,3 +1,12 @@
+
+// color
+//let red = random(100, 255);
+//let green = random(0, 40);
+//let blue = random(100, 255);
+
+// rates and limits
+maxlife = 100;
+
 // This is a class for an individual sensor
 // Each vehicle will have N sensors
 class Sensor {
@@ -26,31 +35,19 @@ class Body {
 
         // position and size
         this.position = createVector(x,y);
-        this.diameter = random(10, 30);
         this.r = 5;
 
-        // color
-        this.red = random(100, 255);
-        this.green = random(0, 40);
-        this.blue = random(100, 255);
-
         // movement
-        this.force = createVector();
         this.acceleration = createVector();
         this.velocity = p5.Vector.random2D();
-        this.maxspeed = 1;
-        this.maxforce = 0.05;
+        this.maxspeed = 4;
+        this.minspeed = 0.25
+        this.maxforce = 0.1;
 
         // status
-        this.energy = this.maxlife;
-        this.speed = 1;
-        this.mass = 10;
+        this.health = maxlife;
         this.age = 0;
-        this.pregnant = false;
-        this.dead = false;
-
-        // rates and limits
-        this.maxlife = 3000;
+        this.score =0;
 
         // shoot
         this.firerate = 0;
@@ -69,46 +66,86 @@ class Body {
             this.sensors[j].val = sensor_power;
         }
 
-
         this.brain = new NeuralNetworkW(this.sensors.length, 32 , 2);
-        this.output =[];
+
+        //debug mode
+        this.outputDebug =[];
 
     }
 
     toBehave(index) {
-        this.createforce(bodies, foods, bullets);
+        //this.createforce(bodies, foods, bullets);
         //this.readsensors(foods);
         this.updateSensors(foods);
-
-        let inputs = [];
-        for(var i = 0 ; i < this.sensors.length; i++){
-          inputs.push(map(this.sensors[i].val, 0, sensor_power, 0, 1));
-        }
-        this.output = this.brain.supletivo(inputs);
-        this.checkwall();
+        this.eat(foods);
+        this.think();
+        circleWorld(this);
+        //this.checkwall();
         this.move();
-        this.draw();
-        this.checkdeath();
-        this.checkpregnant();
-        this.shoot(bodies);
-        if (this.dead) {
-            //bodies.splice(index,1);
-            return;
+
+        //this.checkdeath();
+        //this.checkpregnant();
+        //this.shoot(bodies);
+
+    }
+
+    think(){
+
+      let inputs = [];
+
+      //velocity x and y normalized 0~1
+      let velocityX = this.velocity.x / this.maxspeed;
+      let velocityY = this.velocity.y / this.maxspeed;
+
+      //sensors normalized 0~1
+      for(var i = 0 ; i < this.sensors.length; i++){
+        inputs.push(map(this.sensors[i].val, 0, sensor_power, 1,0));
+      }
+      let output = this.brain.supletivo(inputs);
+      this.outputDebug = output;
+
+      //Turn the output as a vector with low intensity
+      let desired = createVector(output[0]*2-1, output[1]*2-1);
+      //Give power to the direction
+      desired.mult(this.maxspeed);
+      // Craig Reynolds steering formula, smoothing the path
+      let steer = p5.Vector.sub(desired, this.velocity);
+      steer.limit(this.maxforce);
+      //Apply the force
+      this.applyForce(steer);
+    }
+
+    // Check against array of food
+    eat(list) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        // Calculate distance
+        let d = p5.Vector.dist(list[i].position, this.position);
+        // If vehicle is within food radius, eat it!
+        if (d < list[i].nutrition/2) {
+          this.health += list[i].nutrition/2;
+          list.splice(i, 1);
         }
-        if (this.pregnant && bodies.length < bodyLimit) {
-            this.pregnant = false;
-            //bodies.push(new Body());
-            return;
-        }
+      }
     }
 
     move() {
-        this.force.limit(this.maxforce);
-        this.acceleration.set(this.force);
         this.velocity.add(this.acceleration);
         this.velocity.limit(this.maxspeed);
+        if (this.velocity.mag() < this.minspeed) {
+          this.velocity.setMag(this.minspeed);
+        }
         this.position.add(this.velocity);
         this.acceleration.mult(0);
+
+        // Decrease health
+        this.health = constrain(this.health, 0, maxlife);
+        this.health -= 0.1;
+        // Increase score
+        this.score += 1;
+    }
+
+    applyForce(force){
+      this.acceleration.add(force);
     }
 
     grow() {
@@ -139,17 +176,15 @@ class Body {
         }
     }
 
-    checkpregnant() {
-        if (this.energy > 1000 && this.age > 50) {
-            //this.pregnant = true;
-            //this.energy = 500;
-        }
+    reproduce(prob) {
+      // Pick a random number
+      let rand = random(1);
+      // New vehicle with brain copy, otherwise return null;
+      return rand < prob ? new Body(this.position.x,this.position.y) : null;
     }
 
-    checkdeath() {
-        if (this.energy <= 0) {
-            this.dead = true;
-        }
+    isDead() {
+      return this.health <= 0;
     }
 
     createforce(bodies, foods, bullets) {
@@ -167,10 +202,11 @@ class Body {
         steer.limit(this.maxforce);
         this.force = steer;
         */
-
-        // MOUSE MODE
-        let mouse = createVector(mouseX, mouseY);
+        let mouse = createVector(10, y);
         this.force = p5.Vector.sub(mouse,this.position);
+        // MOUSE MODE
+      //  let mouse = createVector(mouseX, mouseY);
+        //this.force = p5.Vector.sub(mouse,this.position);
 
         // GOD MODE
         //var lowdist = Infinity;
@@ -242,17 +278,17 @@ class Body {
 
                 let distance = p5.Vector.dist(this.position, myfood.position);
 
+                // check if food is near enough
+                if (distance > sensor_power) {
+                    continue;
+                }
+
                 let toFood = p5.Vector.sub(myfood.position, this.position);
 
                 let delta = mysensor.dir.angleBetween(toFood);
 
                 // check if food is in the sensor fov
                 if (delta > sensorAngle / 2) {
-                    continue;
-                }
-
-                // check if food is near enough
-                if (distance > sensor_power) {
                     continue;
                 }
 
@@ -263,11 +299,7 @@ class Body {
                 }
             }
 
-            if (nearestDist < sensor_power) {
-                mysensor.val = nearestDist;
-            } else {
-                mysensor.val = sensor_power;
-            }
+            mysensor.val = nearestDist < sensor_power? nearestDist : sensor_power;
 
         }
     }
@@ -343,7 +375,6 @@ class Body {
             bullets.push(new Bullet(this.position, thebody.position));
             this.firerate = 0;
         }
-        //text("firerate="+this.firerate,this.position.x,this.position.y);
     }
 
     draw() {
@@ -355,7 +386,8 @@ class Body {
         if (debug.checked()) {
             this.drawLifeBar();
             this.drawSensorLines();
-            this.drawRangeCircle();
+            //this.drawRangeCircle();
+            text(int(this.score), 10, 0);
         }
 
         // posiciona the body
@@ -363,6 +395,7 @@ class Body {
 
         // rotate the body
         rotate(theta);
+
 
         // draw the body
         this.drawBody();
@@ -377,7 +410,7 @@ class Body {
 
         let reda = color(255, 0, 0);
         let greena = color(0, 255, 0);
-        let life = map(this.energy, 0, this.maxlife, 0, 15);
+        let life = map(this.health, 0, maxlife, 0, 15);
         let lifeColor = map(life, 0, 10, 0, 1);
         var barHealthColor = lerpColor(reda, greena, lifeColor);
 
@@ -392,7 +425,7 @@ class Body {
         drawingContext.shadowColor = "cyan";
         //fill(255, 255, 255);
         noFill();
-        stroke(255, 255, 255);
+        stroke(255, 255, 255,80);
 
         for (let i = 0; i < this.sensors.length; i++) {
             let val = this.sensors[i].val;
