@@ -19,6 +19,9 @@ var bestbody = null;
 var record = -1;
 var slider;
 
+//Padding
+const STATUS_PADDING = 17;
+
 function setup() {
   // world setup
   var mycanvas = createCanvas(1200, 600);
@@ -115,14 +118,17 @@ function drawEverything() {
 }
 
 function drawStats() {
+  var numbTexts = 1;
   push();
   strokeWeight(0);
   stroke(255, 0, 255);
   fill(255, 0, 0);
-  text("FPS: " + frameRate().toFixed(0), 20, 20);
-  text("BODIES: " + bodies.length, 20, 40);
-  text("FOODS: " + foods.length, 20, 60);
-  text("BULLETS: " + bullets.length, 20, 80);
+  text("FPS: " + frameRate().toFixed(0), 20, STATUS_PADDING*numbTexts++);
+  text("BODIES: " + bodies.length, 20, STATUS_PADDING*numbTexts++);
+  text("FOODS: " + foods.length, 20, STATUS_PADDING*numbTexts++);
+  text("BULLETS: " + bullets.length, 20, STATUS_PADDING*numbTexts++);
+  text("SCORE: " + bestbody.score, 20, STATUS_PADDING*numbTexts++);
+  text("GENERATION: " + bestbody.generation, 20, STATUS_PADDING*numbTexts++);
   pop();
 }
 

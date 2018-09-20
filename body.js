@@ -13,7 +13,7 @@ var sensor_power = 150; // max distance that sensor it can see
 var sensorAngle = (Math.PI * 2) / totalSensors; // angle between each sensor
 
 class Body {
-    constructor(x, y, brain) {
+    constructor(x, y, brain, parentGeneration) {
 
         // sensors
         this.sensors = [];
@@ -26,15 +26,22 @@ class Body {
             this.sensors[j].val = sensor_power;
         }
 
-        // brain
+        // brain and its score and its generation
         this.score = 0;
+
+        if(parentGeneration){
+          this.generation = parentGeneration++;
+        }else{
+          this.generation = 1;
+        }
+
         let number_of_inputs = this.sensors.length + 2;
-        if (brain != null) {
-            this.brain = brain.copy();
-            this.brain.mutate();
-          } else {
-            this.brain = new Neural(number_of_inputs, 32, 2);
-          }
+        if (brain) { // No need for brain != null.
+          this.brain = brain.copy();
+          this.brain.mutate();
+        } else {
+          this.brain = new Neural(number_of_inputs, 32, 2);
+        }
 
         // movement, position and size
         this.raio = 8;
@@ -104,7 +111,7 @@ class Body {
     }
 
     clone() {
-        return new Body(this.position.x+20, this.position.y+20, this.brain.copy())
+        return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation)
     }
 
     move() {
@@ -227,33 +234,33 @@ class Body {
         // check food distances
         for (var i = 0; i < foods.length; i++) {
         var target = foods[i];
-        
+
         if (this == target)
         continue;
         //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
-        
+
         var distance = p5.Vector.dist(target.position, this.position);
-        
+
         // eat food
         if (distance < 30) {
         //this.energy += target.energy - target.toxity;
         foods.splice(i, 1);
-        
+
         // restore sensors
         for (let k=0; k<this.sensors.length; k++) {
         this.sensors[k].val = sensor_power;
         }
-        
+
         return;
         }
-        
+
         // find nearest food
         if (distance < lowdist) {
         lowdist = distance;
         thebody = foods[i];
         }
         }
-        
+
         if (thebody == null) {
         return;
         }
