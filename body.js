@@ -135,6 +135,7 @@ class Body {
     }
 
     checkWallCollisions() {
+      //TODO: FIX ME
         /*
             0 = se chegar no final da wall, ganha velocidade contraria
             1 = se chegar no final da wall, reaparece no outro lado

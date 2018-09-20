@@ -35,7 +35,7 @@ class Food {
       this.life += this.growrate;
     }
   }
-  
+
   draw() {
     push();
     //drawingContext.shadowBlur = 0;
@@ -49,7 +49,9 @@ class Food {
     ellipse(this.position.x, this.position.y, this.diameter, this.diameter);
     fill(20, 150, 40, 255);
     if (debug.checked()) {
-      text(this.life.toFixed(0),this.position.x,this.position.y);
+      var stringLife = this.life.toFixed(0);
+      //balance the life in the center of the food.
+      text(stringLife,this.position.x-stringLife.length*3-1,this.position.y+5);
     }
     pop();
   }
