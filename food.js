@@ -1,102 +1,56 @@
 class Food {
-
   constructor() {
-    // position and size
-    this.position = createVector(random(1, width), random(1, height));
-    this.diameter = 1;
-
-    // color
-    this.r = random(0, 50);
-    this.g = random(0, 255);
-    this.b = random(0, 50);
-
-    // status
-    this.energy = random(50, 300);
-    this.pregnant = false;
-    this.dead = false;
-    this.age = random(10, 500);
-    this.nutrition = random(1, 9);
+    this.position = createVector(random(1, width - 1), random(1, height - 1));
+    this.mindiameter = 15;
+    this.maxdiameter = 80;
+    this.diameter = this.mindiameter;
+    this.life = random(0,this.maxlife);
     this.toxity = 1;
-
-    // rates and limits
-    this.GROW_RATE = random(0.01,0.4);
-    this.maxenergy = random(20, 290);
+    this.growrate = random(0.1, 0.3);
+    this.maxlife = random(10, 1000);
   }
 
-  move() {
-    // animate the plants
-    // this.position.add(random(-this.speed, this.speed),random(-this.speed, this.speed));
-  }
-
-  draw() {
-    // configure pen
-    drawingContext.shadowBlur = 2;
-    drawingContext.shadowColor = "green";
-    strokeWeight(1);
-    stroke(20, 100, 80);
-    fill(20, 230, 80);
-
-    // basic draw
-    ellipse(this.position.x, this.position.y, this.nutrition, this.nutrition);
-
-    // nice draw
-    /*
-    noFill();
-    stroke(50, 50, 0);
-    for (let i=this.nutrition; i>=1; i-=7) {
-      ellipse(this.position.x, this.position.y, i, i);
-    }
-    */
-  }
-
-  check_pregnant() {
-    if (this.age > 600) {
-      //this.pregnant = true;
-      //this.age = 0;
-    }
-  }
-
-  check_death() {
-    if (this.energy <= 0 || this.age > 1000) {
-      return true;
-    }
-    return false;
+  behave(index) {
+    this.grow(index);
   }
 
   grow(index) {
+    // update food size from its life
+    this.diameter = map(this.life, 0, this.maxlife, this.mindiameter, this.maxdiameter);
+
+    // avoid food overlap
     for (var i = 0; i < foods.length; i++) {
       if (i == index)
         continue;
 
       var distance = p5.Vector.sub(foods[i].position, this.position);
-      if (distance.mag() < foods[i].nutrition / 2 + this.nutrition / 2 + 1) {
+
+      if (distance.mag() < (foods[i].diameter/2 + this.diameter/2 + 1)) {
         return;
       }
     }
 
-    if (this.nutrition < 50) {
-      this.nutrition += this.GROW_RATE;
+    // grow
+    if (this.life < this.maxlife) {
+      this.life += this.growrate;
     }
   }
-
-  outOfBoundaries() {
-    var raio = this.nutirion / 2;
-  }
-
-  toBehave(index) {
-    this.move();
-    //this.draw();
-    this.check_death();
-    this.check_pregnant();
-    this.grow(index);
-    if (this.dead) {
-      //foods.splice(index,1);
-      return;
+  
+  draw() {
+    push();
+    //drawingContext.shadowBlur = 0;
+    //drawingContext.shadowColor = "green";
+    //drawingContext.shadowOffsetX = 0;
+    //drawingContext.shadowOffsetY = 0;
+    strokeWeight(0);
+    stroke(20, 100, 80);
+    fill(20, 230, 110, 255);
+    //noFill();
+    ellipse(this.position.x, this.position.y, this.diameter, this.diameter);
+    fill(20, 150, 40, 255);
+    if (debug.checked()) {
+      text(this.life.toFixed(0),this.position.x,this.position.y);
     }
-    if (this.pregnant && foods.length < foodLimit) {
-      this.pregnant = false;
-      //foods.push(new Food());
-    }
+    pop();
   }
-
 }

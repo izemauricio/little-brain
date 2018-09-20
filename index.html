@@ -2,22 +2,17 @@
   <head>
     <script src="lib/p5.min.js"></script>
     <script src="lib/p5.dom.min.js"></script>
+    <script src="izelib/izebrain.js"></script>
+    <script src="izelib/izemath.js"></script>
     <script src="canvas.js"></script>
     <script src="food.js"></script>
     <script src="body.js"></script>
     <script src="bullet.js"></script>
-    <script src="nn/neural_network.js"></script>
-    <script language="javascript" type="text/javascript" src="lib/nn.js"></script>
-    <script language="javascript" type="text/javascript" src="lib/matrix.js"></script>
     <style> body{padding:10; margin:0;} </style>
   </head>
   <body>
       <div id='mycanvas'></div>
       <div id="interface">
-        <p>
-          speed: <input id="speedSlider" type="range" min="1" max="100" value="1"> <span id="speed">1</span>
-        </p>
-
         <p>
           debug: <input id="debug" type="checkbox" checked></input>
         </p>

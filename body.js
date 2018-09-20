@@ -1,14 +1,3 @@
-
-// color
-//let red = random(100, 255);
-//let green = random(0, 40);
-//let blue = random(100, 255);
-
-// rates and limits
-maxlife = 100;
-
-// This is a class for an individual sensor
-// Each vehicle will have N sensors
 class Sensor {
     constructor(angle) {
         // The vector describes the sensor's direction
@@ -19,181 +8,197 @@ class Sensor {
         this.val = 0;
     }
 }
-
-// body sensor setup
-// How many sensors does each vehicle have?
-var totalSensors = 8;
-// How far can each vehicle see?
-var sensor_power = 150;
-// What's the angle in between sensors
-var sensorAngle = (Math.PI * 2) / totalSensors;
+var totalSensors = 8; // number of sensor per body
+var sensor_power = 150; // max distance that sensor it can see
+var sensorAngle = (Math.PI * 2) / totalSensors; // angle between each sensor
 
 class Body {
-    constructor(x, y) {
+    constructor(x, y, brain) {
+
+        // sensors
+        this.sensors = [];
+        // split the 360 between the desired number of sensors
+        for (let angle = 0; angle < (Math.PI * 2); angle += sensorAngle) {
+            this.sensors.push(new Sensor(angle));
+        }
+        // all sensors start with maximum length
+        for (let j = 0; j < this.sensors.length; j++) {
+            this.sensors[j].val = sensor_power;
+        }
+
         // brain
-        //this.brain = new NeuralNetwork(inputs, 32, 2);
+        this.score = 0;
+        let number_of_inputs = this.sensors.length + 2;
+        if (brain != null) {
+            this.brain = brain.copy();
+            this.brain.mutate();
+          } else {
+            this.brain = new Neural(number_of_inputs, 32, 2);
+          }
 
-        // position and size
+        // movement, position and size
+        this.raio = 8;
+        this.diameter = 2*this.raio;
         this.position = createVector(x, y);
-        this.r = 5;
-
-        // movement
-        this.acceleration = createVector();
         this.velocity = p5.Vector.random2D();
+        this.acceleration = createVector();
+        this.force = createVector();
+
+        // limits
         this.maxspeed = 4;
         this.minspeed = 0.25
         this.maxforce = 0.1;
-
-        // status
-        this.health = maxlife;
-        this.age = 0;
-        this.score = 0;
+        this.maxlife = 1000;
 
         // shoot
         this.firerate = 0;
         this.reloadtime = random(10, 40);
         this.range = 100;
 
-        // vision
-        this.sensors = [];
-        // Create an array of sensors
-        for (let angle = 0; angle < (Math.PI * 2); angle += sensorAngle) {
-            this.sensors.push(new Sensor(angle));
-        }
-        // All sensors start with maximum length
-        for (let j = 0; j < this.sensors.length; j++) {
-            this.sensors[j].val = sensor_power;
-        }
-
-        this.brain = new NeuralNetworkW(this.sensors.length, 32, 2);
-
-        //debug mode
-        this.outputDebug = [];
+        // stats
+        this.life = this.maxlife;
     }
 
-    toBehave(index) {
-        //this.createforce(bodies, foods, bullets);
-        //this.readsensors(foods);
+    behave(index) {
         this.updateSensors(foods);
         this.eat(foods);
         this.think();
-        circleWorld(this);
-        //this.checkwall();
+        this.checkWallCollisions();
         this.move();
-
-        //this.checkdeath();
-        //this.checkpregnant();
-        //this.shoot(bodies);
-
+        //this.shoot();
     }
 
     think() {
-
+        // send input values to brain
         let inputs = [];
 
-        //velocity x and y normalized 0~1
-        let velocityX = this.velocity.x / this.maxspeed;
-        let velocityY = this.velocity.y / this.maxspeed;
-
-        //sensors normalized 0~1
+        let vx = this.velocity.x / this.maxspeed;
+        let vy = this.velocity.y / this.maxspeed;
+        inputs.push(vx);
+        inputs.push(vy);
         for (var i = 0; i < this.sensors.length; i++) {
             inputs.push(map(this.sensors[i].val, 0, sensor_power, 1, 0));
         }
-        let output = this.brain.supletivo(inputs);
-        this.outputDebug = output;
 
-        //Turn the output as a vector with low intensity
-        let desired = createVector(output[0] * 2 - 1, output[1] * 2 - 1);
-        //Give power to the direction
+        // get brain output
+        let outputs = this.brain.predict(inputs);
+        let desired = createVector(2 * outputs[0] - 1, 2 * outputs[1] - 1);
+        //let desired = createVector(outputs[0]*2,outputs[1]*2);
         desired.mult(this.maxspeed);
-        // Craig Reynolds steering formula, smoothing the path
-        let steer = p5.Vector.sub(desired, this.velocity);
+        let steer = p5.Vector.sub(desired, this.velocity); // Craig Reynolds steering formula
         steer.limit(this.maxforce);
-        //Apply the force
-        this.applyForce(steer);
+        this.force = steer;
+        this.acceleration.add(this.force);
     }
 
-    // Check against array of food
-    eat(list) {
-        for (let i = list.length - 1; i >= 0; i--) {
-            // Calculate distance
-            let d = p5.Vector.dist(list[i].position, this.position);
-            // If vehicle is within food radius, eat it!
-            if (d < list[i].nutrition / 2) {
-                this.health += list[i].nutrition / 2;
-                list.splice(i, 1);
+    // eat the food if it is near the body
+    eat(foods) {
+        for (let i = foods.length - 1; i >= 0; i--) {
+            let food = foods[i];
+            let food_distance = p5.Vector.dist(food.position, this.position);
+            if (food_distance < food.life / 2) {
+                this.life += food.life / 2;
+                foods.splice(i, 1);
             }
         }
     }
 
+    clone() {
+        return new Body(this.position.x+20, this.position.y+20, this.brain.copy())
+    }
+
     move() {
         this.velocity.add(this.acceleration);
+
         this.velocity.limit(this.maxspeed);
+
         if (this.velocity.mag() < this.minspeed) {
             this.velocity.setMag(this.minspeed);
         }
+
         this.position.add(this.velocity);
+
         this.acceleration.mult(0);
 
-        // Decrease health
-        this.health = constrain(this.health, 0, maxlife);
-        this.health -= 0.1;
-        // Increase score
+        this.life = constrain(this.life, 0, this.maxlife);
+
+        this.life -= 1;
+
         this.score += 1;
     }
 
-    applyForce(force) {
-        this.acceleration.add(force);
+    checkWallCollisions() {
+        /*
+            0 = se chegar no final da wall, ganha velocidade contraria
+            1 = se chegar no final da wall, reaparece no outro lado
+            2 = se chegar no final da wall, zera forca
+            3 = se chegar no final da wall, morre
+        */
+        let wallmode = 1;
+
+        if (wallmode == 0) {
+            var d = 1;
+            var desired = null;
+
+            if (this.position.x < d) {
+                desired = createVector(this.maxspeed, this.velocity.y);
+            } else if (this.position.x > width - d) {
+                desired = createVector(-this.maxspeed, this.velocity.y);
+            }
+
+            if (this.position.y < d) {
+                desired = createVector(this.velocity.x, this.maxspeed);
+            } else if (this.position.y > height - d) {
+                desired = createVector(this.velocity.x, -this.maxspeed);
+            }
+
+            if (desired !== null) {
+                desired.setMag(this.maxspeed);
+                var steer = p5.Vector.sub(desired, this.velocity);
+                steer.limit(this.maxforce);
+                this.force.set(steer);
+            }
+        }
+        else if (wallmode == 1) {
+            if (this.position.x < 0) {
+                this.position.x = width - this.position.x * -1
+            }
+            if (this.position.x > width) {
+                this.position.x = (this.position.x - width)
+            }
+            if (this.position.y < 0) {
+                this.position.y = height - this.position.y * -1
+            }
+            if (this.position.y > height) {
+                this.position.y = (this.position.y - height)
+            }
+        }
+        if (wallmode == 2) {
+            if (this.position.x > width + this.raio || this.position.x < -this.raio || this.position.y > height + this.raio || this.position.y < -this.r) {
+                this.life = 0;
+            }
+        }
     }
 
-    grow() {
-        this.age += 0.5;
-    }
-
-    checkwall() {
-        var d = 1;
-        var desired = null;
-
-        if (this.position.x < d) {
-            desired = createVector(this.maxspeed, this.velocity.y);
-        } else if (this.position.x > width - d) {
-            desired = createVector(-this.maxspeed, this.velocity.y);
-        }
-
-        if (this.position.y < d) {
-            desired = createVector(this.velocity.x, this.maxspeed);
-        } else if (this.position.y > height - d) {
-            desired = createVector(this.velocity.x, -this.maxspeed);
-        }
-
-        if (desired !== null) {
-            desired.setMag(this.maxspeed);
-            var steer = p5.Vector.sub(desired, this.velocity);
-            steer.limit(this.maxforce);
-            this.force.set(steer);
-        }
-    }
-
-    reproduce(prob) {
-        // Pick a random number
-        let rand = random(1);
-
-        // New vehicle with brain copy, otherwise return null;
-        return rand < prob ? new Body(this.position.x, this.position.y) : null;
+    isPregnant(prob) {
+        return false;
     }
 
     isDead() {
-        return this.health <= 0;
+        if (this.life <= 0) {
+            return true;
+        }
+       return false;
     }
 
-    createforce(bodies, foods, bullets) {
+    createForce(bodies, foods, bullets) {
 
         // BRAIN MODE
         // inputs
         /*
         let inputs = [];
         for (let j = 0; j < this.sensors.length; j++) {
-            inputs[j + 6] = map(this.sensors[j].val, 0, sensor_power, 1, 0); // mapeia val (0,150) to (1,0)
+        inputs[j + 6] = map(this.sensors[j].val, 0, sensor_power, 1, 0); // mapeia val (0,150) to (1,0)
         }
         let outputs = this.brain.predict(inputs);
         let desired = createVector(2 * outputs[0] - 1, 2 * outputs[1] - 1);
@@ -212,45 +217,45 @@ class Body {
         //var thebody = null;
         /*
         if(this.energy<200) {
-            this.maxspeed = 0.1;
+        this.maxspeed = 0.1;
         } else {
-            this.maxspeed = 1;
+        this.maxspeed = 1;
         }
         */
 
         /*
         // check food distances
         for (var i = 0; i < foods.length; i++) {
-            var target = foods[i];
-
-            if (this == target)
-                continue;
-            //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
-
-            var distance = p5.Vector.dist(target.position, this.position);
-
-            // eat food
-            if (distance < 30) {
-                //this.energy += target.energy - target.toxity;
-                foods.splice(i, 1);
-
-                // restore sensors
-                for (let k=0; k<this.sensors.length; k++) {
-                    this.sensors[k].val = sensor_power;
-                }
-
-                return;
-            }
-
-            // find nearest food
-            if (distance < lowdist) {
-                lowdist = distance;
-                thebody = foods[i];
-            }
+        var target = foods[i];
+        
+        if (this == target)
+        continue;
+        //line(this.position.x,this.position.y,foods[i].position.x,foods[i].position.y);
+        
+        var distance = p5.Vector.dist(target.position, this.position);
+        
+        // eat food
+        if (distance < 30) {
+        //this.energy += target.energy - target.toxity;
+        foods.splice(i, 1);
+        
+        // restore sensors
+        for (let k=0; k<this.sensors.length; k++) {
+        this.sensors[k].val = sensor_power;
         }
-
+        
+        return;
+        }
+        
+        // find nearest food
+        if (distance < lowdist) {
+        lowdist = distance;
+        thebody = foods[i];
+        }
+        }
+        
         if (thebody == null) {
-            return;
+        return;
         }
         var desired = p5.Vector.sub(thebody.position, this.position);
         this.force.set(desired); */
@@ -259,9 +264,6 @@ class Body {
         //text("low="+lowdist,this.position.x,this.position.y+30);
         //var steer = p5.Vector.sub(desired, this.velocity);
         //text("force x="+this.force.x+" y="+this.force.y,this.position.x,this.position.y);
-
-
-
     }
 
     updateSensors(foods) {
@@ -303,7 +305,7 @@ class Body {
         }
     }
 
-    readsensors(foods) {
+    readSensors(foods) {
         for (var i = foods.length - 1; i >= 0; i--) {
 
             // the food
@@ -376,101 +378,117 @@ class Body {
         }
     }
 
-    draw() {
+    // DRAW STUFF
 
+    draw() {
+        this.drawBody();
         if (debug.checked()) {
             this.drawLifeBar();
             this.drawSensorLines();
+            this.drawVectors();
             //this.drawRangeCircle();
-            text(int(this.score), 10, 0);
         }
+    }
 
-        // draw the body
-        this.drawBody();
+    drawArrow(base, vec, myColor) {
+        push();
+        stroke(255,0,0);
+        strokeWeight(1);
+        fill(255,0,0);
+        translate(base.x, base.y);
+        line(0, 0, vec.x, vec.y);
+        rotate(vec.heading());
+        var arrowSize = 7;
+        translate(vec.mag() - arrowSize, 0);
+        triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
+        pop();
+      }
+
+    drawVectors() {
+        //let vv = this.velocity;
+        let vv = this.force;
+        vv.normalize();
+        let v0 = createVector(this.position.x, this.position.y);
+        let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
+        this.drawArrow(v0, v1, 'red');
+
+        push();
+        stroke(255,0,0);
+        noFill();
+        //line(this.position.x, this.position.y, this.position.x + this.velocity.x, this.position.y + this.velocity.y);
+        pop();
     }
 
     drawLifeBar() {
-        push();
-
         //lerpcolor = Linear Interpolation for Color
         //https://www.youtube.com/watch?v=8uLVnM36XUc
         // todo: smooth between 3 colors: red, yellow and green instead of the whole color spectrum.
 
-        let reda = color(255, 0, 0);
-        let greena = color(0, 255, 0);
-        let life = map(this.health, 0, maxlife, 0, 15);
-        let lifeColor = map(life, 0, 10, 0, 1);
-        var barHealthColor = lerpColor(reda, greena, lifeColor);
-
-        fill(barHealthColor);
-        stroke(barHealthColor);
-
-        rect(this.position.x + 15, this.position.y, 4, -life);
-
+        let r = color(255, 0, 0);
+        let g = color(0, 255, 0);
+        let b = color(0, 0, 255);
+        let normalized_life = map(this.life, 0, this.maxlife, 0, 25);
+        let life_color = map(normalized_life, 0, 15, 0, 1);
+        var life_color_nice = lerpColor(r, g, life_color);
+        push();
+        fill(life_color_nice);
+        rect(this.position.x + 15, this.position.y+this.raio, 4, -normalized_life);
+        //text(this.life.toFixed(0),this.position.x + 15, this.position.y);
         pop();
     }
 
     drawSensorLines() {
         push();
-
-        drawingContext.shadowBlur = 5;
-        drawingContext.shadowColor = "cyan";
-        //fill(255, 255, 255);
         noFill();
-        stroke(255, 255, 255, 80);
-
+        stroke(255, 255, 255, 100);
         for (let i = 0; i < this.sensors.length; i++) {
             let val = this.sensors[i].val;
             let pos = this.sensors[i].dir;
-
             if (val > 0) {
-                //strokeWeight(map(val, 0, sensor_power, 4, 1));
-                //drawingContext.shadowBlur = map(val, 0, sensorLength, 6, 1);
-
+                strokeWeight(map(val, 0, sensor_power, 4, 1));
                 line(this.position.x, this.position.y, this.position.x + pos.x * val, this.position.y + pos.y * val);
-
                 //text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
             }
         }
-
         pop();
     }
 
     drawRangeCircle() {
         push();
         noFill();
-        stroke(200, 0, 0);
+        stroke(255, 0, 0, 50);
         strokeWeight(1);
-        drawingContext.shadowBlur = 0;
         ellipse(this.position.x, this.position.y, sensor_power * 2);
         pop();
     }
 
     drawBody() {
-        push();
-
         // angle of the vector velocity + 90 graus
         var theta = this.velocity.heading() + (PI / 2);
 
-        // posiciona the body
-        translate(this.position.x, this.position.y);
+        let r = color(255, 0, 0);
+        let g = color(0, 255, 0);
+        let b = color(0, 0, 255);
+        let normalized_life = map(this.life, 0, this.maxlife, 0, 25);
+        let life_color = map(normalized_life, 0, 15, 0, 1);
+        var life_color_nice = lerpColor(r, g, life_color);
 
-        // rotate the body
+        push();
+
+        translate(this.position.x, this.position.y);
         rotate(theta);
 
-        // color
-        drawingContext.shadowBlur = 0;
-        fill(255, 255, 0);
+        //fill(life_color_nice,255);
+        fill(80,220,255);
         //noFill();
-        stroke(255, 255, 255);
+        stroke(0, 0, 0);
         strokeWeight(1);
 
-        // shape
         beginShape();
-        vertex(0, -this.r * 2);
-        vertex(-this.r, this.r * 2);
-        vertex(this.r, this.r * 2);
-        endShape(CLOSE);
+        vertex(0, -this.raio * 2);
+        vertex(-this.raio, this.raio * 2);
+        vertex(this.raio, this.raio * 2);
+        endShape();
 
         pop();
     }
