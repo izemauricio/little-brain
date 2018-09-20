@@ -26,7 +26,7 @@ class IzeMatrix {
     }
     // return a new matrix m with the same elements of this.matrix
     copy() {
-        let m = new Matrix(this.rows, this.cols);
+        let m = new IzeMatrix(this.rows, this.cols);
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
                 m.data[i][j] = this.data[i][j];
@@ -102,7 +102,7 @@ class IzeMatrix {
           console.log('Columns and Rows of A must match Columns and Rows of B.');
           return;
         }
-    
+
         // Return a new Matrix a-b
         return new IzeMatrix(a.rows, a.cols)
           .map((_, i, j) => a.data[i][j] - b.data[i][j]);
@@ -136,7 +136,7 @@ class IzeMatrix {
                     }
                     return sum;
                 });
-                
+
             }
         }
     }

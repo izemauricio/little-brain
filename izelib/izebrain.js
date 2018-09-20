@@ -2,40 +2,58 @@
 class Neural {
     constructor(num_input_neurons, num_hidden_neurons, num_output_neurons) {
         console.log("hi from neural");
+        if(num_input_neurons instanceof Neural){
+          let nn = num_input_neurons;
 
-        // neural options
-        this.learningrate = 0.1;
-        this.activation_function = sigmoid;
+          // neural options
+          this.learningrate = nn.learningrate;
+          this.activation_function = nn.activation_function;
 
-        // neural size structure
-        this.input = num_input_neurons;
-        this.hidden = num_hidden_neurons;
-        this.output = num_output_neurons;
+          this.input = nn.input;
+          this.hidden = nn.hidden;
+          this.output = nn.output;
 
-        // weight matrix model
-        this.weights_ih = new IzeMatrix(this.hidden, this.input);
-        this.weights_ho = new IzeMatrix(this.output, this.hidden);
+          this.weights_ih = nn.weights_ih.copy();
+          this.weights_ho = nn.weights_ho.copy();
 
-        // random weights values from -1 to 1
-        this.weights_ih.randomize(-1,1);
-        this.weights_ho.randomize(-1,1);
+          this.bias_h = nn.bias_h.copy();
+          this.bias_o = nn.bias_o.copy();
+        }else{
+          // neural options
+          this.learningrate = 0.1;
+          this.activation_function = sigmoid;
 
-        // bias matrix model
-        this.bias_h = new IzeMatrix(this.hidden, 1);
-        this.bias_o = new IzeMatrix(this.output, 1);
+          // neural size structure
+          this.input = num_input_neurons;
+          this.hidden = num_hidden_neurons;
+          this.output = num_output_neurons;
 
-        // random bias values from -1 to 1
-        this.bias_h.randomize(-1,1);
-        this.bias_o.randomize(-1,1);
+          // weight matrix model
+          this.weights_ih = new IzeMatrix(this.hidden, this.input);
+          this.weights_ho = new IzeMatrix(this.output, this.hidden);
+
+          // random weights values from -1 to 1
+          this.weights_ih.randomize(-1,1);
+          this.weights_ho.randomize(-1,1);
+
+          // bias matrix model
+          this.bias_h = new IzeMatrix(this.hidden, 1);
+          this.bias_o = new IzeMatrix(this.output, 1);
+
+          // random bias values from -1 to 1
+          this.bias_h.randomize(-1,1);
+          this.bias_o.randomize(-1,1);
+        }
+
     }
     mutate() {
         let func = function(v,i,j) {
             if (random(1) < 0.1) {
                 let offset = randomGaussian() * 0.5;
-                let newx = x + offset;
+                let newx = v + offset;
                 return newx;
               } else {
-                return x;
+                return v;
               }
         }
         this.weights_ih.map(func);
