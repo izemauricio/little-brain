@@ -4,7 +4,7 @@ var number_of_foods = 30;
 
 // maximum of objects allowed in this simulation
 var foodLimit = 70;
-var bodyLimit = 5;
+var bodyLimit = 1;
 
 // all objects
 var bodies = [];
@@ -162,7 +162,11 @@ function drawBackground() {
   background(20);
 }
 
+
+
 function mouseClicked() {
   console.log(bestbody);
-  bodies.push(bestbody.clone(mouseX,mouseY));
+  var einstein = NeuralNetwork.deserialize(bestOne);
+  //bodies.push(bestbody.clone(mouseX,mouseY));
+  bodies.push(new Body(width/2,height/2, einstein));
 }
