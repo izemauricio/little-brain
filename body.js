@@ -12,6 +12,17 @@ var totalSensors = 8; // number of sensor per body
 var sensor_power = 150; // max distance that sensor it can see
 var sensorAngle = (Math.PI * 2) / totalSensors; // angle between each sensor
 
+// Mutation function to be passed into Vehicle's brain
+function mutate(x) {
+  if (random(1) < 0.1) {
+    let offset = randomGaussian() * 0.5;
+    let newx = x + offset;
+    return newx;
+  } else {
+    return x;
+  }
+}
+
 class Body {
     constructor(x, y, brain, parentGeneration) {
 
@@ -38,9 +49,9 @@ class Body {
         let number_of_inputs = this.sensors.length + 6;
         if (brain) { // No need for brain != null.
           this.brain = brain.copy();
-          this.brain.mutate();
+          this.brain.mutate(mutate);
         } else {
-          this.brain = new Neural(number_of_inputs, 32, 2);
+          this.brain = new NeuralNetwork(number_of_inputs, 32, 2);
         }
 
         // movement, position and size
