@@ -113,7 +113,7 @@ class Body {
         for (let i = foods.length - 1; i >= 0; i--) {
             let food = foods[i];
             let food_distance = p5.Vector.dist(food.position, this.position);
-            if (food_distance < food.life / 2) {
+            if (food_distance < food.diameter/2) {
                 this.life += food.life / 2;
                 foods.splice(i, 1);
             }
