@@ -305,6 +305,11 @@ class Body {
     }
 
     updateSensors(foods) {
+        for (let j = 0; j < this.sensors.length; j++) {
+          this.sensors[j].val = sensor_power;
+        }
+
+
         // for each sensor, check if there is a food in the sensor fov
         for (let i = 0; i < this.sensors.length; i++) {
             let mysensor = this.sensors[i];
