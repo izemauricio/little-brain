@@ -4,7 +4,7 @@ var number_of_foods = 30;
 
 // maximum of objects allowed in this simulation
 var foodLimit = 70;
-var bodyLimit = 500;
+var bodyLimit = 5;
 
 // all objects
 var bodies = [];
@@ -77,6 +77,8 @@ function behaveEverything() {
     foods[i].behave(i);
   }
 
+  //Best record from the cycle
+  var recordCycle = -1;
   // BODY
   // keep population
   //if (bestbody != null && bestbody.brain !== undefined) {bodies.push(bestbody.clone()); console.log("cloned:"); console.log(bestbody);} else {bodies.push(new Body(100,100));}
@@ -86,16 +88,28 @@ function behaveEverything() {
       bodies.splice(i, 1);
       continue;
     }
-    // adicionar?
-    if (bodies[i].isPregnant()) {
-    }
+
     // behave!
     bodies[i].behave(i);
 
     // jogos ferozes! - keep track of the best body
-    if (bodies[i].score > record) {
-      record = bodies[i].score;
+    if (bodies[i].score > recordCycle) {
+      recordCycle = bodies[i].score;
       bestbody = bodies[i];
+    }
+  }
+
+  // If there is less than bodyLimit apply reproduction
+  if (bodies.length < bodyLimit) {
+    for (var i = bodies.length-1; i >=0 ;i-- ) {
+      var v = bodies[i];
+      // Every body has a chance of cloning itself according to score
+      // Argument to "clone" is probability
+      var newVehicle = v.clone(0.05 * v.score / recordCycle);
+      // If there is a child
+      if (newVehicle && newVehicle != null) {
+        bodies.push(newVehicle);
+      }
     }
   }
 

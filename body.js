@@ -30,7 +30,7 @@ class Body {
         this.score = 0;
 
         if(parentGeneration){
-          this.generation = parentGeneration++;
+          this.generation = ++parentGeneration;
         }else{
           this.generation = 1;
         }
@@ -80,7 +80,6 @@ class Body {
         let inputs = [];
 
         var w1 = constrain(map(this.position.x, FOOD_PADDING, 0, 0, 1), 0, 1);
-
         var w2 = constrain(map(this.position.y, FOOD_PADDING, 0, 0, 1), 0, 1);
         var w3 = constrain(map(this.position.x, width - FOOD_PADDING, width, 0, 1), 0, 1);
         var w4 = constrain(map(this.position.y, height - FOOD_PADDING, height, 0, 1), 0, 1);
@@ -123,8 +122,17 @@ class Body {
     clone(x,y) {
       if(x && y){
         return new Body(x, y, this.brain.copy(),this.generation);
+      }else if (x){
+        var prob = x;
+        // Pick a random number
+        let r = random(1);
+        if (r < prob) {
+          // New vehicle with brain copy
+          return new Body(random(width), random(height), this.brain.copy(),this.generation);
+        }
       }
-        return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation);
+
+      return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation);
     }
 
     move() {
@@ -155,7 +163,7 @@ class Body {
             2 = se chegar no final da wall, zera forca
             3 = se chegar no final da wall, morre
         */
-        let wallmode = 1;
+        let wallmode = 2;
 
         if (wallmode == 0) {
             var d = 1;
@@ -179,8 +187,7 @@ class Body {
                 steer.limit(this.maxforce);
                 this.force.set(steer);
             }
-        }
-        else if (wallmode == 1) {
+        }else if (wallmode == 1) {
             if (this.position.x < 0) {
                 this.position.x = width - this.position.x * -1
             }
@@ -193,9 +200,8 @@ class Body {
             if (this.position.y > height) {
                 this.position.y = (this.position.y - height)
             }
-        }
-        if (wallmode == 2) {
-            if (this.position.x > width + this.raio || this.position.x < -this.raio || this.position.y > height + this.raio || this.position.y < -this.r) {
+        }else if (wallmode == 2) {
+            if (this.position.x > width || this.position.x < 0 || this.position.y > height  || this.position.y < 0) {
                 this.life = 0;
             }
         }
@@ -206,7 +212,7 @@ class Body {
     }
 
     isDead() {
-        if (this.life <= 0) {
+        if (this.life < 1) {
             return true;
         }
        return false;

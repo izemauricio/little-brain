@@ -1,7 +1,7 @@
 // adapted from Toy-Neural-Network-JS
 class Neural {
     constructor(num_input_neurons, num_hidden_neurons, num_output_neurons) {
-        console.log("hi from neural");
+        //console.log("hi from neural");
         if(num_input_neurons instanceof Neural){
           let nn = num_input_neurons;
 
