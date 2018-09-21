@@ -35,7 +35,7 @@ class Body {
           this.generation = 1;
         }
 
-        let number_of_inputs = this.sensors.length + 2;
+        let number_of_inputs = this.sensors.length + 6;
         if (brain) { // No need for brain != null.
           this.brain = brain.copy();
           this.brain.mutate();
@@ -79,6 +79,16 @@ class Body {
         // send input values to brain
         let inputs = [];
 
+        var w1 = constrain(map(this.position.x, FOOD_PADDING, 0, 0, 1), 0, 1);
+
+        var w2 = constrain(map(this.position.y, FOOD_PADDING, 0, 0, 1), 0, 1);
+        var w3 = constrain(map(this.position.x, width - FOOD_PADDING, width, 0, 1), 0, 1);
+        var w4 = constrain(map(this.position.y, height - FOOD_PADDING, height, 0, 1), 0, 1);
+        inputs.push(w1);
+        inputs.push(w2);
+        inputs.push(w3);
+        inputs.push(w4);
+
         let vx = this.velocity.x / this.maxspeed;
         let vy = this.velocity.y / this.maxspeed;
         inputs.push(vx);
@@ -110,8 +120,11 @@ class Body {
         }
     }
 
-    clone() {
-        return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation)
+    clone(x,y) {
+      if(x && y){
+        return new Body(x, y, this.brain.copy(),this.generation);
+      }
+        return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation);
     }
 
     move() {
@@ -417,7 +430,8 @@ class Body {
         let vv = this.force;
         vv.normalize();
         let v0 = createVector(this.position.x, this.position.y);
-        let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
+        //let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
+        let v1 = createVector(vv.x,vv.y );
         this.drawArrow(v0, v1, 'red');
 
         push();

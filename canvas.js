@@ -14,13 +14,17 @@ var bullets = [];
 // show debug information?
 var debug;
 
+// Slider to speed up simulation
+let speedSlider;
+let speedSpan;
+
 // keep track of the best body so far
 var bestbody = null;
 var record = -1;
-var slider;
 
 //Padding
 const STATUS_PADDING = 17;
+const FOOD_PADDING = 50;
 
 function setup() {
   // world setup
@@ -43,12 +47,20 @@ function setup() {
   debug = select('#debug');
 
   // create dom object from this js
-  slider = createSlider(0.01, 0.5, 0.1, 0.01);
+  speedSlider = select('#speedSlider');
+  speedSpan = select('#speed');
 }
 
 function draw() {
-  // BEHAVE
-  behaveEverything();
+  // How fast should we speed up
+  let cycles = speedSlider.value();
+  speedSpan.html(cycles);
+
+  //How many updates the objs before draw.
+  for(var i = 0 ; i < cycles; i++){
+    // BEHAVE
+    behaveEverything();
+  }
 
   // DRAW
   drawEverything();
@@ -138,5 +150,5 @@ function drawBackground() {
 
 function mouseClicked() {
   console.log(bestbody);
-  bodies.push(bestbody.clone());
+  bodies.push(bestbody.clone(mouseX,mouseY));
 }
