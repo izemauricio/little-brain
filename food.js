@@ -1,13 +1,14 @@
 class Food {
   constructor() {
-    this.position = createVector(random(1, width - 1), random(1, height - 1));
-    this.mindiameter = 15;
-    this.maxdiameter = 80;
+    this.offset = 100;
+    this.position = createVector(random(this.offset, width - this.offset), random(this.offset, height - this.offset));
+    this.mindiameter = 10;
+    this.maxdiameter = 20;
     this.diameter = this.mindiameter;
-    this.life = random(0,this.maxlife);
+    this.life = 1;
     this.toxity = 1;
-    this.growrate = random(0.1, 0.3);
-    this.maxlife = random(10, 1000);
+    this.growrate = 1;
+    this.maxlife = 1;
   }
 
   behave(index) {
@@ -42,8 +43,8 @@ class Food {
     //drawingContext.shadowColor = "green";
     //drawingContext.shadowOffsetX = 0;
     //drawingContext.shadowOffsetY = 0;
-    strokeWeight(0);
-    stroke(20, 100, 80);
+    strokeWeight(1);
+    stroke(164, 244, 66);
     fill(20, 230, 110, 255);
     //noFill();
     ellipse(this.position.x, this.position.y, this.diameter, this.diameter);
@@ -51,7 +52,7 @@ class Food {
     if (debug.checked()) {
       var stringLife = this.life.toFixed(0);
       //balance the life in the center of the food.
-      text(stringLife,this.position.x-stringLife.length*3-1,this.position.y+5);
+      //text(stringLife,this.position.x-stringLife.length*3-1,this.position.y+5);
     }
     pop();
   }

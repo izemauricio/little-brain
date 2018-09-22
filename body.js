@@ -28,10 +28,12 @@ class Body {
 
         // sensors
         this.sensors = [];
+
         // split the 360 between the desired number of sensors
         for (let angle = 0; angle < (Math.PI * 2); angle += sensorAngle) {
             this.sensors.push(new Sensor(angle));
         }
+
         // all sensors start with maximum length
         for (let j = 0; j < this.sensors.length; j++) {
             this.sensors[j].val = sensor_power;
@@ -66,7 +68,7 @@ class Body {
         this.maxspeed = 4;
         this.minspeed = 0.25
         this.maxforce = 0.1;
-        this.maxlife = 1000;
+        this.maxlife = 100;
 
         // shoot
         this.firerate = 0;
@@ -74,7 +76,7 @@ class Body {
         this.range = 100;
 
         // stats
-        this.life = this.maxlife;
+        this.life = 1;
     }
 
     behave(index) {
@@ -90,6 +92,7 @@ class Body {
         // send input values to brain
         let inputs = [];
 
+        // wall limits
         var w1 = constrain(map(this.position.x, FOOD_PADDING, 0, 0, 1), 0, 1);
         var w2 = constrain(map(this.position.y, FOOD_PADDING, 0, 0, 1), 0, 1);
         var w3 = constrain(map(this.position.x, width - FOOD_PADDING, width, 0, 1), 0, 1);
@@ -99,10 +102,13 @@ class Body {
         inputs.push(w3);
         inputs.push(w4);
 
+        // velocity
         let vx = this.velocity.x / this.maxspeed;
         let vy = this.velocity.y / this.maxspeed;
         inputs.push(vx);
         inputs.push(vy);
+
+        // distance sensors
         for (var i = 0; i < this.sensors.length; i++) {
             inputs.push(map(this.sensors[i].val, 0, sensor_power, 1, 0));
         }
@@ -124,26 +130,14 @@ class Body {
             let food = foods[i];
             let food_distance = p5.Vector.dist(food.position, this.position);
             if (food_distance < food.diameter/2) {
-                this.life += food.life / 2;
+                this.life += food.life;
                 foods.splice(i, 1);
             }
         }
     }
 
-    clone(x,y) {
-      if(x && y){
-        return new Body(x, y, this.brain.copy(),this.generation);
-      }else if (x){
-        var prob = x;
-        // Pick a random number
-        let r = random(1);
-        if (r < prob) {
-          // New vehicle with brain copy
-          return new Body(random(width), random(height), this.brain.copy(),this.generation);
-        }
-      }
-
-      return new Body(this.position.x+20, this.position.y+20, this.brain.copy(),this.generation);
+    clone() {
+      return new Body(width/2, height/2, this.brain.copy(),this.generation);
     }
 
     move() {
@@ -161,7 +155,7 @@ class Body {
 
         this.life = constrain(this.life, 0, this.maxlife);
 
-        this.life -= 1;
+        this.life -= 0.005;
 
         this.score += 1;
     }
@@ -174,7 +168,7 @@ class Body {
             2 = se chegar no final da wall, zera forca
             3 = se chegar no final da wall, morre
         */
-        let wallmode = 2;
+        let wallmode = 3;
 
         if (wallmode == 0) {
             var d = 1;
@@ -211,7 +205,7 @@ class Body {
             if (this.position.y > height) {
                 this.position.y = (this.position.y - height)
             }
-        }else if (wallmode == 2) {
+        }else if (wallmode == 3) {
             if (this.position.x > width || this.position.x < 0 || this.position.y > height  || this.position.y < 0) {
                 this.life = 0;
             }
@@ -223,7 +217,7 @@ class Body {
     }
 
     isDead() {
-        if (this.life < 1) {
+        if (this.life < 0) {
             return true;
         }
        return false;
@@ -422,9 +416,9 @@ class Body {
     }
 
     // DRAW STUFF
-
     draw() {
         this.drawBody();
+
         if (debug.checked()) {
             this.drawLifeBar();
             this.drawSensorLines();
@@ -438,6 +432,7 @@ class Body {
         stroke(255,0,0);
         strokeWeight(1);
         fill(255,0,0);
+
         translate(base.x, base.y);
         line(0, 0, vec.x, vec.y);
         rotate(vec.heading());
@@ -448,18 +443,23 @@ class Body {
       }
 
     drawVectors() {
-        //let vv = this.velocity;
+
+        // draw score n life
+        push();
+        fill(255);
+        stroke(0);
+        textSize(20);
+        text(this.score +"/"+ int(this.life),this.position.x,this.position.y);
+        pop();
+
+        // draw force
+        push();
         let vv = this.force;
         vv.normalize();
         let v0 = createVector(this.position.x, this.position.y);
-        //let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
-        let v1 = createVector(vv.x,vv.y );
+        let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
+        //let v1 = createVector(vv.x,vv.y);
         this.drawArrow(v0, v1, 'red');
-
-        push();
-        stroke(255,0,0);
-        noFill();
-        //line(this.position.x, this.position.y, this.position.x + this.velocity.x, this.position.y + this.velocity.y);
         pop();
     }
 
@@ -484,18 +484,35 @@ class Body {
     drawSensorLines() {
         push();
         noFill();
-        stroke(255, 255, 255, 100);
+        stroke(66, 232, 244, 100);
         for (let i = 0; i < this.sensors.length; i++) {
             let val = this.sensors[i].val;
             let pos = this.sensors[i].dir;
             if (val > 0) {
-                strokeWeight(map(val, 0, sensor_power, 4, 1));
+                strokeWeight(map(val, 0, sensor_power, 6, 0));
                 line(this.position.x, this.position.y, this.position.x + pos.x * val, this.position.y + pos.y * val);
                 //text("VAL: " + val + " - POS: " + position2.x + "," + position2.y, this.position.x, this.position.y + (15 * (i + 1)));
             }
         }
         pop();
     }
+
+    drawHighlight() {
+        //console.log("output1:"+ (this.o1*2-1) + "  output2:" + (this.o2*2-1));
+        fill(255, 255, 0, 100);
+        stroke(255,255,0);
+        line(this.position.x,this.position.y,
+          this.position.x+ this.o1*100,this.position.y + this.o2*100);
+    
+        fill(255, 0, 255, 100);
+        stroke(255,0,255);
+        line(this.position.x,this.position.y,
+          this.position.x+ (this.o1*2 - 1)*this.maxspeed*10,this.position.y + (this.o2*2 -1 ) *this.maxspeed*10);
+    
+        fill(255, 255, 255, 50);
+        stroke(255);
+        ellipse(this.position.x, this.position.y, 32, 32);
+      }
 
     drawRangeCircle() {
         push();
@@ -523,7 +540,7 @@ class Body {
         rotate(theta);
 
         //fill(life_color_nice,255);
-        fill(80,220,255);
+        fill(80,220,255,200);
         //noFill();
         stroke(0, 0, 0);
         strokeWeight(1);

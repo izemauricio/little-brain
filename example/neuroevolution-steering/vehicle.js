@@ -36,6 +36,7 @@ class Vehicle {
     this.acceleration = createVector();
     this.velocity = createVector();
     this.position = createVector(random(width), random(height));
+    this.force = createVector();
     this.r = 4;
     this.maxforce = 0.1;
     this.maxspeed = 4;
@@ -194,6 +195,7 @@ class Vehicle {
 
   // Add force to acceleration
   applyForce(force) {
+    this.force = force;
     this.acceleration.add(force);
   }
 
@@ -206,6 +208,8 @@ class Vehicle {
     push();
     // Translate to vehicle position
     translate(this.position.x, this.position.y);
+
+    
 
     // Draw lines for all the activated sensors
     if (debug.checked()) {
@@ -221,7 +225,9 @@ class Vehicle {
       // Display score next to each vehicle
       noStroke();
       fill(255, 200);
-      text(int(this.score), 10, 0);
+      textSize(20);
+      text(int(this.score) + "/"+int(this.health), 10, 0);
+      this.drawVectors();
     }
     // Draw a triangle rotated in the direction of velocity
     let theta = this.velocity.heading() + PI / 2;
@@ -255,4 +261,33 @@ class Vehicle {
     stroke(255);
     ellipse(this.position.x, this.position.y, 32, 32);
   }
+
+  drawArrow(base, vec, myColor) {
+    push();
+    stroke(255,0,0);
+    strokeWeight(1);
+    fill(255,0,0);
+
+    //translate(base.x, base.y);
+    line(0, 0, vec.x, vec.y);
+    rotate(vec.heading());
+    var arrowSize = 7;
+    translate(vec.mag() - arrowSize, 0);
+    triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
+    pop();
+  }
+
+drawVectors() {
+
+
+    // draw force
+    push();
+    let vv = this.force;
+    vv.normalize();
+    let v0 = createVector(0, 0);
+    let v1 = createVector(vv.x * this.raio*4,vv.y * this.raio*4);
+    //let v1 = createVector(vv.x,vv.y);
+    this.drawArrow(v0, v1, 'red');
+    pop();
+}
 }

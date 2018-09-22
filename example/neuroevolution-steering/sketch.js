@@ -39,12 +39,13 @@ function setup() {
   // Add canvas and grab checkbox and slider
   let canvas = createCanvas(640, 360);
   canvas.parent('canvascontainer');
+
   debug = select('#debug');
   speedSlider = select('#speedSlider');
   speedSpan = select('#speed');
 
   // Create initial population
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 2; i++) {
     population[i] = new Vehicle();
   }
 }
@@ -71,7 +72,7 @@ function draw() {
     }
 
     // Go through all vehicles and find the best!
-    let record = -1;
+    var record = -1;
     for (let i = population.length - 1; i >= 0; i--) {
       let v = population[i];
       // Eat the food (index 0)
@@ -91,7 +92,7 @@ function draw() {
     }
 
     // If there is less than 20 apply reproduction
-    if (population.length < 5) {
+    if (population.length < 2) {
       for (let v of population) {
         // Every vehicle has a chance of cloning itself according to score
         // Argument to "clone" is probability
@@ -110,6 +111,19 @@ function draw() {
     stroke(100, 255, 100);
     ellipse(food[i].x, food[i].y, foodRadius * 2);
   }
+
+  // draw stats
+  var numbTexts = 1;
+  var OFFSET = 20;
+  push();
+  strokeWeight(0);
+  stroke(255, 0, 255);
+  fill(255, 0, 0);
+  text("FPS: " + frameRate().toFixed(0), 20, OFFSET*numbTexts++);
+  text("BODIES: " + population.length, 20, OFFSET*numbTexts++);
+  text("FOODS: " + food.length, 20, OFFSET*numbTexts++);
+  text("RECORD: " + record, 20, OFFSET*numbTexts++);
+  pop();
 
   // Highlight the best if in debug mode
   //if (debug.checked()) {

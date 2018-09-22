@@ -20,28 +20,18 @@ let speedSpan;
 
 // keep track of the best body so far
 var bestbody = null;
-var record = -1;
+
 
 //Padding
-const STATUS_PADDING = 17;
+const STATUS_PADDING = 20;
 const FOOD_PADDING = 50;
 
 function setup() {
   // world setup
-  var mycanvas = createCanvas(1200, 600);
+  var mycanvas = createCanvas(800, 600);
   mycanvas.parent('mycanvas');
-  frameRate(60);
+  //frameRate(60);
   angleMode(RADIANS);
-
-  // create foods
-  for (var i = 0; i < number_of_foods; i++) {
-    foods[i] = new Food();
-  }
-
-  // create bodies
-  for (var i = 0; i < number_of_bodies; i++) {
-    bodies[i] = new Body(random(0, width), random(0, height));
-  }
 
   // get debug mode from user html dom object
   debug = select('#debug');
@@ -49,6 +39,16 @@ function setup() {
   // create dom object from this js
   speedSlider = select('#speedSlider');
   speedSpan = select('#speed');
+
+  // create foods
+  for (let i = 0; i < number_of_foods; i++) {
+    foods[i] = new Food();
+  }
+
+  // create bodies
+  for (let i = 0; i < number_of_bodies; i++) {
+    bodies[i] = new Body(random(0, width), random(0, height));
+  }
 }
 
 function draw() {
@@ -56,7 +56,7 @@ function draw() {
   let cycles = speedSlider.value();
   speedSpan.html(cycles);
 
-  //How many updates the objs before draw.
+  // how many updates the objs before draw.
   for(var i = 0 ; i < cycles; i++){
     // BEHAVE
     behaveEverything();
@@ -67,46 +67,53 @@ function draw() {
 }
 
 function behaveEverything() {
-  // FOOD
+
   // keep food population
   if (foods.length < 30) {
     foods.push(new Food());
     return;
   }
+
+  // food behave
   for (var i = foods.length - 1; i >= 0; i--) {
     foods[i].behave(i);
   }
 
-  //Best record from the cycle
-  var recordCycle = -1;
-  // BODY
-  // keep population
-  //if (bestbody != null && bestbody.brain !== undefined) {bodies.push(bestbody.clone()); console.log("cloned:"); console.log(bestbody);} else {bodies.push(new Body(100,100));}
+  // remove dead bodies
   for (var i = bodies.length - 1; i >= 0; i--) {
-    // remover?
     if (bodies[i].isDead()) {
       bodies.splice(i, 1);
       continue;
     }
-
-    // behave!
-    bodies[i].behave(i);
-
-    // jogos ferozes! - keep track of the best body
-    if (bodies[i].score > recordCycle) {
-      recordCycle = bodies[i].score;
-      bestbody = bodies[i];
-    }
   }
 
-  // If there is less than bodyLimit apply reproduction
-  if (bodies.length < bodyLimit) {
+  // select the best body score
+  var recordCycle = -1;
+  for (var i = bodies.length - 1; i >= 0; i--) {
+    if (bodies[i].score > recordCycle) {
+    recordCycle = bodies[i].score;
+    bestbody = bodies[i];
+    }
+  }
+  push();
+  fill(255);
+  text("RECORD: " + recordCycle, 0, 0);
+  pop();
+
+  // body behave
+  for (var i = bodies.length - 1; i >= 0; i--) {
+    bodies[i].behave(i);
+  }
+
+  // if less than 20, try to do reproduction on every body
+  if (bodies.length < 10) {
     for (var i = bodies.length-1; i >=0 ;i-- ) {
       var v = bodies[i];
-      // Every body has a chance of cloning itself according to score
-      // Argument to "clone" is probability
+      
+      // flip coins to see if it can clone itself %5 * body-score/record-score
       var newVehicle = v.clone(0.05 * v.score / recordCycle);
-      // If there is a child
+
+      // if yes
       if (newVehicle && newVehicle != null) {
         bodies.push(newVehicle);
       }
@@ -130,10 +137,13 @@ function drawEverything() {
     foods[i].draw();
   }
 
-  // animals
+  // bodies
   for (var i = bodies.length - 1; i >= 0; i--) {
     bodies[i].draw();
   }
+
+  // highligh the bestbody
+  bestbody.drawHighlight();
 
   // bullets
 
@@ -141,6 +151,8 @@ function drawEverything() {
   if (debug.checked()) {
     drawStats();
   }
+
+  
 }
 
 function drawStats() {
@@ -149,11 +161,13 @@ function drawStats() {
   strokeWeight(0);
   stroke(255, 0, 255);
   fill(255, 0, 0);
+  textSize(18);
   text("FPS: " + frameRate().toFixed(0), 20, STATUS_PADDING*numbTexts++);
   text("BODIES: " + bodies.length, 20, STATUS_PADDING*numbTexts++);
   text("FOODS: " + foods.length, 20, STATUS_PADDING*numbTexts++);
   text("BULLETS: " + bullets.length, 20, STATUS_PADDING*numbTexts++);
   text("SCORE: " + bestbody.score, 20, STATUS_PADDING*numbTexts++);
+  
   text("GENERATION: " + bestbody.generation, 20, STATUS_PADDING*numbTexts++);
   pop();
 }
@@ -162,11 +176,9 @@ function drawBackground() {
   background(20);
 }
 
-
-
 function mouseClicked() {
-  console.log(bestbody);
-  var einstein = NeuralNetwork.deserialize(bestOne);
+  //console.log(bestbody);
+  //var einstein = NeuralNetwork.deserialize(bestOne);
   //bodies.push(bestbody.clone(mouseX,mouseY));
-  bodies.push(new Body(width/2,height/2, einstein));
+  //bodies.push(new Body(width/2,height/2, einstein));
 }
